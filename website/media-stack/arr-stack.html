@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>The arr Stack — Dylan Zickus</title>
+<meta name="description" content="Radarr, Sonarr, Lidarr, Bazarr, and Prowlarr automating the full library lifecycle. Hardlink setup, custom format scoring, and a security incident with malware-disguised torrents." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body>
+
+<nav class="site-nav">
+  <a class="nav-logo" href="../index.html">Dylan Zickus</a>
+  <ul class="nav-links">
+    <li><a href="../index.html">Home</a></li>
+    <li><a href="../smart-home-projects/index.html">Smart Home</a></li>
+    <li><a href="../bathroom-esp/index.html">Bathroom ESP</a></li>
+    <li><a href="../living-room-led/index.html">LED Strip</a></li>
+    <li><a href="../alarm-system-keypad/index.html">Alarm</a></li>
+    <li><a href="../smart-switch-mount/index.html">Switch Mount</a></li>
+    <li><a href="../egg-timer/index.html">Egg Timer</a></li>
+    <li><a href="../ct-clamp-project/index.html">CT Clamp</a></li>
+    <li><a href="index.html" class="active">Media Stack</a></li>
+    <li><a href="../overengineered-clock/index.html">Clock</a></li>
+  </ul>
+</nav>
+
+<div class="breadcrumb">
+  <a href="../index.html">dylanzickus.com</a> <span class="sep">/</span> <a href="index.html">Self-Hosted Media Stack</a> <span class="sep">/</span> <span class="current">The arr Stack</span>
+</div>
+
+<header class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-content">
+    <div class="eyebrow">dylanzickus.com  /  The arr Stack</div>
+    <h1>The arr Stack</h1>
+    <p class="hero-desc">Radarr, Sonarr, Lidarr, Bazarr, and Prowlarr automating the full library lifecycle. Hardlink setup, custom format scoring, and a security incident with malware-disguised torrents.</p>
+
+  </div>
+</header>
+
+<main class="main narrow">
+  <div class="md-body">
+<blockquote>
+<p>Automated library management: find it, download it, organize it, and keep it up to date.</p>
+</blockquote>
+<h2>Overview</h2>
+<p>The "arr stack" is a collection of open-source tools that automate the entire lifecycle of a media library. You tell Radarr you want a movie, and it finds a release, hands it to qBittorrent to download, waits for it to finish, moves it into your library in the right place with the right name, and notifies Jellyfin to scan the new file. No manual searching, no manual renaming, no manual moving.</p>
+<p>The full stack:</p>
+<table>
+<thead>
+<tr>
+<th>Tool</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Radarr</strong></td>
+<td>Movies — monitors for new releases, manages quality upgrades</td>
+</tr>
+<tr>
+<td><strong>Sonarr</strong></td>
+<td>TV shows — tracks episodes, seasons, ongoing series</td>
+</tr>
+<tr>
+<td><strong>Lidarr</strong></td>
+<td>Music — album and artist tracking</td>
+</tr>
+<tr>
+<td><strong>Bazarr</strong></td>
+<td>Subtitles — automatically fetches subtitles for everything</td>
+</tr>
+<tr>
+<td><strong>Prowlarr</strong></td>
+<td>Indexer proxy — manages torrent indexers in one place and syncs them to Radarr/Sonarr/Lidarr</td>
+</tr>
+<tr>
+<td><strong>qBittorrent</strong></td>
+<td>Download client</td>
+</tr>
+</tbody>
+</table>
+<p>All of these run as Docker containers on nas-pi, with download traffic routed through a VPN tunnel — see the <a href="vpn-routing.html">VPN &amp; Downloading page</a> for how that works.</p>
+<hr />
+<h2>Hardlinks: Why They Matter</h2>
+<p>One of the first things to get right in an arr stack is <strong>hardlinks</strong>. Without them, importing a completed download into the library means copying the file — temporarily doubling your storage use and taking time proportional to file size. With hardlinks, the "copy" is instantaneous and uses no additional space: both the download path and the library path point to the same underlying data on disk.</p>
+<p>For hardlinks to work, the download directory and library directory <strong>must be on the same filesystem</strong>. The standard pattern is a unified <code>/data</code> tree:</p>
+<pre><code>/data/
+  downloads/
+    movies/
+    tv/
+  media/
+    movies/
+    tv/
+    music/
+</code></pre>
+<p>Every container that needs to touch files — qBittorrent, Radarr, Sonarr, Jellyfin — mounts <code>/data</code> at the same path. This took some iteration to get right, particularly making sure Jellyfin's library root aligned with the same mount structure the arr containers use.</p>
+<hr />
+<h2>Quality Profiles and Custom Formats</h2>
+<p>Radarr and Sonarr have a sophisticated quality system that goes well beyond "grab the highest bitrate release." <strong>Custom formats</strong> let you score releases based on codec, audio track, resolution, source, and more — and set a minimum score a release must meet before it's grabbed, and a target score that triggers automatic upgrades.</p>
+<p>The current scoring setup, developed specifically around what the Tdarr pipeline can and can't do:</p>
+<table>
+<thead>
+<tr>
+<th>Custom Format</th>
+<th>Score</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>5.1 Surround Audio</td>
+<td>+100</td>
+</tr>
+<tr>
+<td>x264 (H.264 video)</td>
+<td>+50</td>
+</tr>
+<tr>
+<td>AAC Audio</td>
+<td>+10</td>
+</tr>
+<tr>
+<td>Stereo Only</td>
+<td>0</td>
+</tr>
+<tr>
+<td>Avoid HEVC</td>
+<td>0</td>
+</tr>
+<tr>
+<td>Avoid AV1</td>
+<td>0</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Why 5.1 ranks highest:</strong> Tdarr can transcode any video codec to H.264, but it cannot fabricate surround sound from a stereo-only source. A stereo-only release is a permanent downgrade in audio quality. So the priority is: get a release with real 5.1 audio first, then worry about video codec.</p>
+<p><strong>Why x264 ranks second:</strong> A native H.264 release means no transcoding needed at all. HEVC and AV1 need to go through Tdarr before they direct-play everywhere, so there's a real operational cost to grabbing them — they're not avoided, just deprioritized.</p>
+<p>The minimum custom format score is set to 100, meaning Radarr won't grab anything without verified surround audio. Max quality is capped at Bluray-1080p (not Remux) to keep file sizes manageable — Remux files can be 40–60GB each, which is untenable at nas-pi's upload speed ceiling.</p>
+<hr />
+<h2>The Security Incident</h2>
+<p>In Q2 2026, qBittorrent downloaded a batch of torrent files that contained <code>.exe</code> and <code>.scr</code> executables disguised as TV episodes. The files showed up in Sonarr as completed downloads but obviously weren't playable video.</p>
+<p><strong>What happened:</strong> A torrent indexer (since removed) was either compromised or simply hosted malicious content. The files made it all the way through the pipeline — downloaded, extracted, and sitting in the downloads directory — before being flagged.</p>
+<p><strong>The risk:</strong> <code>.scr</code> files are Windows screensavers — executable by double-click. On a Linux server, they're inert. But the incident raised a real question: had anything actually run? The answer was almost certainly no (qBittorrent runs as a non-privileged user, and nothing in the pipeline executes downloaded files), but "almost certainly" isn't "definitely."</p>
+<p><strong>What changed:</strong>
+- Removed the indexer that served the malicious content
+- Audited all remaining indexers and set per-indexer minimum seeder counts in Prowlarr (low-seeder releases are statistically higher risk)
+- Added Uptime-Kuma alerting so unusual activity is more visible
+- Accepted that this is an inherent risk of the download pipeline and the mitigation is defense-in-depth (non-privileged users, container isolation, regular audits), not elimination</p>
+<p>The episode was a good reminder that running a download pipeline isn't a set-and-forget operation. Indexer quality matters.</p>
+<hr />
+<h2>Indexers (via Prowlarr)</h2>
+<p>Current active indexers, synced automatically to Radarr and Sonarr:</p>
+<ul>
+<li>1337x</li>
+<li>The Pirate Bay</li>
+<li>Knaben</li>
+<li>YTS (movies)</li>
+<li>LimeTorrents (TV)</li>
+<li>EZTV (TV)</li>
+</ul>
+<p>TorrentGalaxy was removed after persistent redirect and connection errors. Indexer reliability matters — a slow or flaky indexer degrades the whole pipeline's responsiveness.</p>
+<hr />
+<h2>Lessons Learned</h2>
+<p><strong>Get the <code>/data</code> mount structure right first, before adding content.</strong> Retroactively fixing hardlinks in an existing library is painful. Plan the filesystem layout before you import anything.</p>
+<p><strong>Quality profiles are genuinely powerful but need domain knowledge.</strong> The custom format scoring system only makes sense once you understand what Tdarr can and can't do, what your clients can direct-play, and what your storage constraints are. It took a few iterations to get to a setup that makes the right tradeoffs automatically.</p>
+<p><strong>Indexer hygiene matters for both reliability and security.</strong> Remove indexers that misbehave. Set minimum seeder counts. Don't treat the indexer list as "more is better."</p>
+  </div>
+
+</main>
+
+</body>
+</html>

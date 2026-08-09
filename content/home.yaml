@@ -1,0 +1,85 @@
+hero:
+  eyebrow: "dylanzickus.com  /  Projects"
+  heading_html: "Hardware, Home Automation<br>&amp; Homelab"
+  description: >-
+    A collection of embedded builds, ESP microcontroller projects, smart home automation,
+    and self-hosted infrastructure — spanning a dorm room, an apartment, and a lot of
+    trial and error with MQTT, Zigbee, Docker, and Home Assistant.
+  pills:
+    - ESP8266 / ESP32
+    - Arduino
+    - MQTT
+    - Home Assistant
+    - Zigbee
+    - 3D Printing
+    - Docker
+    - Linux
+    - Self-hosting
+
+other_builds:
+  - title: Lizard Watering System
+    status: live
+    status_label: Live
+    description: >-
+      "Water Spotty" — Alexa-triggered ESP relay controls a pump over a lizard's bowl.
+      30-second timed run, then auto-shutoff.
+  - title: Automated Blinds
+    status: wip
+    status_label: In progress
+    description: >-
+      Motor + rope mechanism for window blinds. Motor selected, firmware written,
+      rope rigged. Needs mounting bracket and enclosure before install.
+  - title: Fridge Milk Weight Sensor
+    status: wip
+    status_label: Proof of concept
+    description: >-
+      Load cells in a 3D-printed base to track milk by weight. Confirmed fridge = Faraday
+      cage. Stalled on load cell calibration.
+  - title: mmWave Presence Sensors
+    status: live
+    status_label: Live
+    description: >-
+      Apartment-wide occupancy via heartbeat/breathing detection. Drives automatic lighting
+      and sleep vs. active room state in HA.
+  - title: Roku Custom Remote
+    status: live
+    status_label: Live
+    description: >-
+      HA virtual remotes for smart TVs — no app load, no device scan, connects directly
+      to a specific TV and responds immediately.
+  - title: Desk Occupancy Lighting
+    status: retired
+    status_label: Dorm
+    description: >-
+      Pressure sensor under desk chair toggled an LED strip above the desk.
+      Turn-off delay prevented flicker on brief stands.
+  - title: Bedtime Detection Routine
+    status: retired
+    status_label: Dorm
+    description: >-
+      Smart switch detected phone-charging after sunset as a sleep proxy →
+      goodnight notification + all lights off. Zero interaction.
+  - title: Tablet HA Dashboard
+    status: retired
+    status_label: Retired
+    description: >-
+      Old tablet too slow for the HA web UI — sourced a third-party automation app,
+      got it running. Superseded by Alexa.
+
+core_stack:
+  - key: Hub
+    value: Home Assistant
+  - key: MCU
+    value: ESP8266 / ESP32
+  - key: Protocol
+    value: Zigbee + MQTT
+  - key: Broker
+    value: Mosquitto
+  - key: Voice
+    value: Alexa + Google Home
+  - key: Firmware
+    value: Arduino (C++)
+  - key: Fabrication
+    value: FDM 3D printing
+  - key: Domain
+    value: dylanzickus.com

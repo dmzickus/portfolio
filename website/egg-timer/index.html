@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>OLED Egg Timer + HA Companion — Dylan Zickus</title>
+<meta name="description" content="Standalone timer with animated egg character on SSD1306 OLED. Full HA dashboard with per-roommate notification routing. Hardware and firmware done; never merged or shipped." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body>
+
+<nav class="site-nav">
+  <a class="nav-logo" href="../index.html">Dylan Zickus</a>
+  <ul class="nav-links">
+    <li><a href="../index.html">Home</a></li>
+    <li><a href="../smart-home-projects/index.html">Smart Home</a></li>
+    <li><a href="../bathroom-esp/index.html">Bathroom ESP</a></li>
+    <li><a href="../living-room-led/index.html">LED Strip</a></li>
+    <li><a href="../alarm-system-keypad/index.html">Alarm</a></li>
+    <li><a href="../smart-switch-mount/index.html">Switch Mount</a></li>
+    <li><a href="index.html" class="active">Egg Timer</a></li>
+    <li><a href="../ct-clamp-project/index.html">CT Clamp</a></li>
+    <li><a href="../media-stack/index.html">Media Stack</a></li>
+    <li><a href="../overengineered-clock/index.html">Clock</a></li>
+  </ul>
+</nav>
+
+<div class="breadcrumb">
+  <a href="../index.html">dylanzickus.com</a> <span class="sep">/</span> <span class="current">OLED Egg Timer + HA Companion</span>
+</div>
+
+<header class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-content">
+    <div class="eyebrow">dylanzickus.com  /  OLED Egg Timer + HA Companion</div>
+    <h1>OLED Egg Timer + HA Companion</h1>
+    <p class="hero-desc">Standalone timer with animated egg character on SSD1306 OLED. Full HA dashboard with per-roommate notification routing. Hardware and firmware done; never merged or shipped.</p>
+
+  </div>
+</header>
+
+<main class="main narrow">
+  <div class="md-body">
+<h2>Overview</h2>
+<p>A standalone kitchen timer built around an OLED display, rotary encoder, and buzzer — with a full Home Assistant companion dashboard and per-roommate push notification support. The problem it solved was simple: microwave timers would go off while everyone had retreated to their rooms, and nobody would hear it. Before Alexa arrived, this was the solution.</p>
+<p>The hardware came together in two distinct phases: an initial LCD-based prototype to nail the timer logic and UX, then a second pass with an SSD1306 OLED and animated egg character. Both phases worked independently. They were never merged into a single firmware, and the CAD egg enclosure was never finished. The problem became moot when Alexa made the whole thing redundant.</p>
+<hr />
+<h2>Hardware</h2>
+<ul>
+<li><strong>Microcontroller:</strong> ESP8266</li>
+<li><strong>Display:</strong> SSD1306 128×64 OLED (I2C, 0x3C), Adafruit_SSD1306</li>
+<li><strong>Input:</strong> Rotary encoder (CLK/DT/SW pins)</li>
+<li><strong>Output:</strong> Passive buzzer — distinct tones for increment, decrement, start, stop, reset, and finish</li>
+<li><strong>Enclosure:</strong> Planned as a 3D-printed egg shape — CAD was started, never finished</li>
+</ul>
+<hr />
+<h2>Firmware — What Existed</h2>
+<h3>Phase 1 — LCD Timer (<code>egg_timer_proto.ino</code>)</h3>
+<p>The first firmware ran on a 16×2 I2C LCD and established all the core timer behavior:</p>
+<ul>
+<li>Rotary encoder adjusts time in <strong>30-second increments</strong></li>
+<li><strong>Press</strong> to start or stop the countdown</li>
+<li><strong>Hold</strong> to reset to zero</li>
+<li>Display shows <code>HH:MM:SS</code> with leading-zero padding, collapsing hours when zero</li>
+<li>Distinct buzzer tones for each action (inc, dec, start, stop, reset, finish)</li>
+<li>Timer decrements via <code>millis()</code> — no blocking delays in the main loop</li>
+</ul>
+<pre><code class="language-cpp">void ledWrite / printTime() logic — manual cursor placement to avoid full lcd.clear()
+on every tick, with digit-count tracking to know when a clear is actually needed.
+</code></pre>
+<p>The <code>printTime()</code> implementation is careful about partial redraws: it tracks digit counts for minutes and hours separately so it only calls <code>lcd.clear()</code> when the number of digits actually changes (e.g. 10:00 → 9:59), avoiding flicker on every second tick.</p>
+<h3>Phase 2 — OLED + Animations (<code>oled_egg_animation.ino</code>)</h3>
+<p>A separate sketch built out the OLED visuals:</p>
+<p><strong>Startup — <code>eggDanceWithSound()</code>:</strong> An egg character bounces side to side (±4px), alternating arm and leg poses on each frame, with clicky buzzer tones synced to the step. Runs for a configurable duration.</p>
+<pre><code class="language-cpp">void drawEgg(int x, int y, bool step) {
+  display.fillEllipse(x, y, 14, 18, SSD1306_WHITE); // body
+  // Eyes, smile, alternating arms and legs based on `step`
+}
+</code></pre>
+<p><strong>Finish — <code>eggCrackAnimation()</code>:</strong> A 7-stage crack sequence: the egg shell splits apart progressively, falls off screen, then plays a three-note finish jingle.</p>
+<pre><code class="language-cpp">for (int stage = 0; stage &lt; 7; stage++) {
+  drawCrackedEgg(64, 32, stage);
+  // Crack sounds: descending pitch early, deeper thud late
+}
+</code></pre>
+<h3>What Was Never Done</h3>
+<p>The two sketches were never merged. A complete firmware would have:
+- Replaced the LCD with the OLED
+- Shown the dancing egg while the timer counts down
+- Triggered the crack animation on finish
+- Added WiFi + MQTT to sync state with Home Assistant</p>
+<hr />
+<h2>Home Assistant Integration</h2>
+<h3>Dashboard</h3>
+<p>A custom Lovelace card with full timer control:</p>
+<ul>
+<li><strong>Time Remaining</strong> — live countdown display</li>
+<li><strong>Progress gauge</strong> — arc showing % elapsed</li>
+<li><strong>Timer State</strong> — <code>RUNNING</code> / <code>STOPPED</code> / <code>RESET</code></li>
+<li><strong>Start / Stop / Reset</strong> buttons</li>
+<li><strong>+30s / −30s</strong> buttons</li>
+<li><strong>Per-roommate notification toggles</strong> — Dylan, Cole, Gabe; tap to opt in before starting</li>
+</ul>
+<h3>Underlying Entities</h3>
+<table>
+<thead>
+<tr>
+<th>Entity</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>input_number.timer_remaining</code></td>
+<td>Seconds remaining, decremented every second by automation</td>
+</tr>
+<tr>
+<td><code>input_number.timer_total</code></td>
+<td>Original duration (for progress %)</td>
+</tr>
+<tr>
+<td><code>input_text.timer_state</code></td>
+<td><code>RUNNING</code> / <code>STOPPED</code> / <code>RESET</code></td>
+</tr>
+<tr>
+<td><code>input_boolean.timer_dylan/cole/gabe</code></td>
+<td>Notification opt-in per roommate</td>
+</tr>
+<tr>
+<td><code>input_button.timer_start/stop/reset/add_30s/sub_30s</code></td>
+<td>Dashboard button triggers</td>
+</tr>
+</tbody>
+</table>
+<h3>Automations</h3>
+<p>Every action has two paths — one triggered by the dashboard button, one by MQTT from the physical device — so both stay in sync:</p>
+<table>
+<thead>
+<tr>
+<th>Automation</th>
+<th>Trigger</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Timer Start</td>
+<td>Button or <code>egg_timer/state: START</code></td>
+<td>Set state → RUNNING</td>
+</tr>
+<tr>
+<td>Timer Stop</td>
+<td>Button or <code>egg_timer/state: STOP</code></td>
+<td>Set state → STOPPED</td>
+</tr>
+<tr>
+<td>Timer Reset</td>
+<td>Button or <code>egg_timer/state: RESET</code></td>
+<td>Set state → RESET, zero both numbers</td>
+</tr>
+<tr>
+<td>Add 30s</td>
+<td>Button or <code>egg_timer/state: ADD30</code></td>
+<td>Increment remaining + total; if RESET → STOPPED</td>
+</tr>
+<tr>
+<td>Sub 30s</td>
+<td>Button or <code>egg_timer/state: SUB30</code></td>
+<td>Decrement remaining + total (guarded: remaining &gt; 29)</td>
+</tr>
+<tr>
+<td>Timer Decrease</td>
+<td><code>time_pattern</code> every second</td>
+<td>Decrement <code>timer_remaining</code> while RUNNING</td>
+</tr>
+<tr>
+<td>Timer Finished</td>
+<td><code>timer_remaining</code> drops below 1</td>
+<td>Zero both, stop, fire notification script, reset booleans</td>
+</tr>
+</tbody>
+</table>
+<h3>MQTT Topics</h3>
+<pre><code>egg_timer/command    ← HA → device  (START, STOP, RESET, ADD30, SUB30)
+egg_timer/state      ← device → HA  (same payload set)
+egg_timer/notification ← device → HA (Dylan / Cole / Gabe — toggles opt-in boolean)
+</code></pre>
+<p>The physical device was meant to publish its own encoder/button actions to <code>egg_timer/state</code> so HA mirrors the local state in real time. This was never wired up.</p>
+<hr />
+<h2>Architecture</h2>
+<pre><code>┌─────────────────────────────────┐
+│        Home Assistant           │
+│  Lovelace dashboard:            │
+│  countdown, gauge, state label  │
+│  start/stop/reset, ±30s,        │
+│  per-roommate notification opt-in│
+└────────────┬────────────────────┘
+             │ MQTT publish / subscribe
+             ▼
+┌─────────────────────────────────┐
+│     Mosquitto MQTT Broker       │
+│  egg_timer/command              │
+│  egg_timer/state                │
+│  egg_timer/notification         │
+└────────────┬────────────────────┘
+             │ (never connected)
+             ▼
+┌─────────────────────────────────┐
+│         ESP8266                 │
+│  Rotary encoder → 30s steps     │
+│  Press → start/stop             │
+│  Hold → reset                   │
+│  Buzzer tones per action        │
+└────────────┬────────────────────┘
+             │ I2C
+             ▼
+┌─────────────────────────────────┐
+│   SSD1306 128×64 OLED           │
+│  Dancing egg → countdown        │
+│  Crack animation → finish       │
+│  (animation never merged)       │
+└─────────────────────────────────┘
+</code></pre>
+<hr />
+<h2>What Works</h2>
+<ul>
+<li>LCD prototype timer: full countdown logic, encoder input, buzzer tones, hold-to-reset</li>
+<li>OLED animations: dancing egg startup, crack finish sequence, synced buzzer sounds</li>
+<li>Home Assistant dashboard: all controls, progress gauge, per-roommate notification toggles</li>
+<li>HA automation set: complete bidirectional MQTT + button trigger coverage</li>
+</ul>
+<h2>What Was Never Finished</h2>
+<ul>
+<li><strong>Firmware merge</strong> — OLED + animations + timer logic + MQTT never combined into one sketch</li>
+<li><strong>MQTT bridge</strong> — ESP never connected to HA; the two sides never talked</li>
+<li><strong>Enclosure</strong> — egg-shaped CAD was planned, never modeled or printed</li>
+<li><strong>Project relevance</strong> — Alexa solved the same problem before any of this shipped</li>
+</ul>
+<hr />
+<h2>Tech Stack</h2>
+<table>
+<thead>
+<tr>
+<th>Layer</th>
+<th>Technology</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Microcontroller</td>
+<td>ESP8266</td>
+</tr>
+<tr>
+<td>Firmware</td>
+<td>Arduino (C++) — Adafruit_SSD1306, Adafruit_GFX</td>
+</tr>
+<tr>
+<td>Display</td>
+<td>SSD1306 128×64 OLED (I2C)</td>
+</tr>
+<tr>
+<td>Messaging</td>
+<td>MQTT (Mosquitto broker) — planned, not connected</td>
+</tr>
+<tr>
+<td>Smart home</td>
+<td>Home Assistant — input helpers, Lovelace, automations</td>
+</tr>
+<tr>
+<td>Notifications</td>
+<td>HA mobile push, per-roommate opt-in via input_boolean</td>
+</tr>
+</tbody>
+</table>
+  </div>
+
+</main>
+
+</body>
+</html>

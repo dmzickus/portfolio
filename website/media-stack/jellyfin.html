@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Jellyfin — Dylan Zickus</title>
+<meta name="description" content="Open-source media server handling library cataloging, metadata, and streaming. Why it runs natively instead of containerized, and the crash-debugging saga." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body>
+
+<nav class="site-nav">
+  <a class="nav-logo" href="../index.html">Dylan Zickus</a>
+  <ul class="nav-links">
+    <li><a href="../index.html">Home</a></li>
+    <li><a href="../smart-home-projects/index.html">Smart Home</a></li>
+    <li><a href="../bathroom-esp/index.html">Bathroom ESP</a></li>
+    <li><a href="../living-room-led/index.html">LED Strip</a></li>
+    <li><a href="../alarm-system-keypad/index.html">Alarm</a></li>
+    <li><a href="../smart-switch-mount/index.html">Switch Mount</a></li>
+    <li><a href="../egg-timer/index.html">Egg Timer</a></li>
+    <li><a href="../ct-clamp-project/index.html">CT Clamp</a></li>
+    <li><a href="index.html" class="active">Media Stack</a></li>
+    <li><a href="../overengineered-clock/index.html">Clock</a></li>
+  </ul>
+</nav>
+
+<div class="breadcrumb">
+  <a href="../index.html">dylanzickus.com</a> <span class="sep">/</span> <a href="index.html">Self-Hosted Media Stack</a> <span class="sep">/</span> <span class="current">Jellyfin</span>
+</div>
+
+<header class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-content">
+    <div class="eyebrow">dylanzickus.com  /  Jellyfin</div>
+    <h1>Jellyfin</h1>
+    <p class="hero-desc">Open-source media server handling library cataloging, metadata, and streaming. Why it runs natively instead of containerized, and the crash-debugging saga.</p>
+
+  </div>
+</header>
+
+<main class="main narrow">
+  <div class="md-body">
+<blockquote>
+<p>Open-source media server. Streams the library to browsers, phones, TVs, and anything else with a network connection.</p>
+</blockquote>
+<h2>What Jellyfin Does</h2>
+<p>Jellyfin is the frontend of the whole stack — it's what you actually interact with when you want to watch something. It handles:</p>
+<ul>
+<li><strong>Cataloging</strong> the media library with metadata, artwork, and descriptions pulled from online databases (TMDB, MusicBrainz, etc.)</li>
+<li><strong>Streaming</strong> to clients: browser, iOS/Android app, TV apps, game consoles</li>
+<li><strong>Transcoding</strong> on-the-fly when a client can't play a file natively — converting it to something compatible in real time</li>
+<li><strong>User management</strong> — multiple users with separate watch histories and preferences</li>
+</ul>
+<p>The goal is to get as close to <strong>direct play</strong> as possible: the server sends the file as-is and the client decodes it locally. Transcoding is expensive (CPU-heavy, increases latency, and can degrade quality), so the <a href="tdarr.html">Tdarr pipeline</a> exists specifically to normalize the library to a codec and container that every client can direct-play.</p>
+<hr />
+<h2>Why Native, Not Containerized</h2>
+<p>Almost everything in this stack runs in Docker containers. Jellyfin is the exception — it runs as a native <code>systemd</code> service on the Pi 5.</p>
+<p>The containerized Jellyfin image on ARM had recurring stability issues that were difficult to diagnose and harder to fix inside a container (library paths, hardware device access, etc.). Running it natively gives direct access to the filesystem and system logs, makes <code>systemctl</code> management straightforward, and sidesteps a class of container networking issues around media library paths.</p>
+<p>The tradeoff: updates require a manual <code>apt upgrade</code> rather than a <code>docker compose pull</code>. Worth it for the stability.</p>
+<hr />
+<h2>Configuration Highlights</h2>
+<p><strong>Library paths</strong> are shared with the arr stack containers via a unified <code>/data</code> directory structure. This is important for hardlinks to work — Radarr needs to be able to move a completed download into the library using a hardlink (not a copy), which only works if both the download directory and the library directory are on the same filesystem. Jellyfin's library root matches this layout.</p>
+<p><strong>User preferences</strong> handle audio and subtitle defaults — default English audio track, no default subtitles — rather than encoding these preferences into the files themselves. This keeps the pipeline simpler (Tdarr doesn't need to set default stream flags) and lets different users configure their own preferences independently.</p>
+<p><strong>Hardware transcoding</strong> is intentionally left mostly unused. The Pi 5 doesn't have useful hardware encode capability, and software transcoding at 1080p is CPU-intensive enough to cause problems if multiple streams need it simultaneously. The answer is to avoid transcoding in the first place — hence the Tdarr pipeline.</p>
+<hr />
+<h2>Stability Issues</h2>
+<p>Jellyfin on the Pi 5 has had two distinct crash incidents:</p>
+<h3>Crash 1: Permission Reset Loop</h3>
+<p>The <code>/var/log/jellyfin</code> directory kept having its permissions reset, causing Jellyfin to crash when it couldn't write logs. The root cause was a combination of how the native package sets up permissions on startup and an interaction with OMV's filesystem management. Fixed by locking down the directory ownership and ensuring the <code>jellyfin</code> user owned it persistently.</p>
+<h3>Crash 2: Missing Log Directory</h3>
+<p>A later crash (signal <code>ABRT</code>) was traced to <code>/var/log/jellyfin</code> not existing at all — the directory had been removed, possibly during an OS-level cleanup or a manual tidy that went too far. Jellyfin couldn't start because it had nowhere to write logs. Fixed by recreating the directory with correct ownership, then confirmed with <code>systemctl status jellyfin</code> that it came back clean.</p>
+<p>Both crashes were annoying to diagnose remotely (SSH into the Pi from the apartment, read journals, chase file permissions), but ultimately straightforward fixes once the root cause was clear.</p>
+<hr />
+<h2>What Good Looks Like</h2>
+<p>With the Tdarr pipeline completing its initial library pass, the steady-state goal is:</p>
+<ul>
+<li><strong>100% direct play</strong> for 1080p H.264 content on all clients</li>
+<li>Zero transcoding during normal playback</li>
+<li>Jellystat confirming direct-play rates over time</li>
+</ul>
+<p>Jellyfin's own dashboard shows per-stream play method (Direct Play / Direct Stream / Transcode) — watching that metric improve as the library gets normalized is a good feedback loop.</p>
+  </div>
+
+</main>
+
+</body>
+</html>

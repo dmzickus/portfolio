@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Bathroom Automation Controller — Dylan Zickus</title>
+<meta name="description" content="ESP8266 handling a 3-state occupancy machine from a reed switch and DHT11 — door-triggered lighting plus shower detection driving a servo fan via Home Assistant." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body>
+
+<nav class="site-nav">
+  <a class="nav-logo" href="../index.html">Dylan Zickus</a>
+  <ul class="nav-links">
+    <li><a href="../index.html">Home</a></li>
+    <li><a href="../smart-home-projects/index.html">Smart Home</a></li>
+    <li><a href="index.html" class="active">Bathroom ESP</a></li>
+    <li><a href="../living-room-led/index.html">LED Strip</a></li>
+    <li><a href="../alarm-system-keypad/index.html">Alarm</a></li>
+    <li><a href="../smart-switch-mount/index.html">Switch Mount</a></li>
+    <li><a href="../egg-timer/index.html">Egg Timer</a></li>
+    <li><a href="../ct-clamp-project/index.html">CT Clamp</a></li>
+    <li><a href="../media-stack/index.html">Media Stack</a></li>
+    <li><a href="../overengineered-clock/index.html">Clock</a></li>
+  </ul>
+</nav>
+
+<div class="breadcrumb">
+  <a href="../index.html">dylanzickus.com</a> <span class="sep">/</span> <span class="current">Bathroom Automation Controller</span>
+</div>
+
+<header class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-content">
+    <div class="eyebrow">dylanzickus.com  /  Bathroom Automation Controller</div>
+    <h1>Bathroom Automation Controller</h1>
+    <p class="hero-desc">ESP8266 handling a 3-state occupancy machine from a reed switch and DHT11 — door-triggered lighting plus shower detection driving a servo fan via Home Assistant.</p>
+
+  </div>
+</header>
+
+<main class="main narrow">
+  <div class="md-body">
+<h2>Overview</h2>
+<p>An ESP8266 in the bathroom handles two independent sensor streams: a magnetic reed switch on the door and a DHT11 temperature/humidity sensor. Together they feed a three-state occupancy machine running entirely in Home Assistant, which uses the result to control the bathroom light automatically. The door determines whether the room is empty or occupied; the humidity sensor detects shower activity and promotes the state accordingly. Five automations cover every transition, and manual light changes are implicitly handled — the sensor events are always the source of truth, so the state self-corrects on the next trigger regardless of what happened to the light in the interim.</p>
+<p>A servo-driven exhaust fan is hardware-complete and pending firmware. A VOC sensor and automated air freshener are planned additions.</p>
+<hr />
+<h2>Hardware</h2>
+<ul>
+<li><strong>Microcontroller:</strong> ESP8266 (D1 Mini or similar NodeMCU variant)</li>
+<li><strong>Humidity/Temperature sensor:</strong> DHT11 on <code>D4</code> (GPIO2)</li>
+<li><strong>Door sensor:</strong> Magnetic reed switch on <code>D3</code> (GPIO0), wired to GND with <code>INPUT_PULLUP</code></li>
+<li><strong>Light control:</strong> Physical smart flipper on the wall switch — actuates multiple bulbs via Home Assistant</li>
+<li><strong>Fan control (hardware-ready):</strong> Servo motor in a custom 3D-printed wall switch cover — CAD complete, firmware pending</li>
+<li><strong>MQTT broker:</strong> Mosquitto on <code>192.168.1.144:1883</code></li>
+</ul>
+<h3>Wiring</h3>
+<pre><code>DHT11
+  VCC  ── 3.3V
+  DATA ── D4 (GPIO2)
+  GND  ── GND
+
+Reed Switch
+  Pin A ── D3 (GPIO0)
+  Pin B ── GND
+  INPUT_PULLUP enabled — LOW = door closed, HIGH = door open
+</code></pre>
+<blockquote>
+<p><strong>Boot pin note:</strong> GPIO0 (D3) is the ESP8266 boot mode pin. The reed switch being closed (pulling GPIO0 LOW) can prevent the chip from entering flash mode. Disconnect the reed switch before re-flashing if you run into upload failures.</p>
+</blockquote>
+<hr />
+<h2>Iteration History</h2>
+<p>Development ran through five distinct files, each one adding a layer. The interesting evolution is in how door state gets handled.</p>
+<h3>Stage 1 — Proof of Concept (<code>simple_temp_humidity.ino</code>)</h3>
+<p>Bare DHT11 sketch. Reads humidity and temperature every 2 seconds and prints to Serial at 9600 baud. No networking, no door sensor — just confirming the DHT11 was wired correctly and returning sane values before building anything on top of it.</p>
+<hr />
+<h3>Stage 2 — Door Added (<code>bathroom_humidity_and_door_sensor.ino</code>)</h3>
+<p>Adds the reed switch on GPIO0 with <code>INPUT_PULLUP</code>. Door state is read each loop cycle and printed alongside temp/humidity. Still serial only — the complete hardware verification stage before introducing WiFi or MQTT.</p>
+<hr />
+<h3>Stage 3 — MQTT Stub (<code>led_strip_mqtt_almost.ino</code>)</h3>
+<p>Adds WiFi and MQTT boilerplate — WiFi connect, broker connect, reconnect loop — but <code>postState()</code> never actually calls <code>client.publish()</code>. The publish calls are absent, hence the name. Worth noting: the filename is a misnaming artifact; this file has nothing to do with LED strips and was used as the MQTT scaffolding starting point for the bathroom project.</p>
+<hr />
+<h3>Stage 4 — First Working MQTT Build (<code>bathroom_mqtt.ino</code>)</h3>
+<p>First fully working version. Temp and humidity publish on a 2-second timer. Door state publishes every loop cycle regardless of whether it changed:</p>
+<pre><code class="language-cpp">void updateDoor() {
+  bool isOpen = digitalRead(DOORPIN);
+  const char* state = isOpen ? &quot;open&quot; : &quot;closed&quot;;
+  Serial.print(&quot;Door is &quot;);
+  Serial.println(state);
+  client.publish(door_state_topic, state, true);  // every loop — chatty
+}
+</code></pre>
+<p>This worked end-to-end and was usable for testing, but flooding the broker with repeated identical retained messages added unnecessary noise and slightly slowed HA automation response.</p>
+<hr />
+<h3>Stage 5 — Final Deployed Firmware (<code>bathroom_mqtt_quicker_door.ino</code>)</h3>
+<p>Adds a <code>door_open</code> bool initialized at startup from the actual pin state, and only publishes when the value changes:</p>
+<pre><code class="language-cpp">void updateDoor() {
+  bool isOpen = digitalRead(DOORPIN);
+  if (isOpen != door_open) {         // only publish on change
+    door_open = isOpen;
+    const char* state = isOpen ? &quot;open&quot; : &quot;closed&quot;;
+    Serial.print(&quot;Door is &quot;);
+    Serial.println(state);
+    client.publish(door_state_topic, state, true);
+  }
+}
+</code></pre>
+<p>The initialization matters — without it, <code>door_open</code> defaults to <code>false</code> and the ESP fires a spurious publish on the first loop if the door happens to be open at boot. Seeding it from <code>digitalRead(DOORPIN)</code> in <code>setup()</code> prevents that.</p>
+<p>The DHT read guards against <code>NaN</code> before publishing, which prevents bad sensor readings from polluting retained state:</p>
+<pre><code class="language-cpp">void postDHT() {
+  float humidity = dht.readHumidity();
+  float temperatureF = dht.readTemperature(true);
+  if (isnan(humidity) || isnan(temperatureF)) {
+    Serial.println(&quot;Failed to read from DHT11 sensor!&quot;);
+    return;
+  }
+  client.publish(temp_state_topic, String(temperatureF).c_str(), true);
+  client.publish(humidity_state_topic, String(humidity).c_str(), true);
+}
+</code></pre>
+<hr />
+<h2>MQTT Topics</h2>
+<table>
+<thead>
+<tr>
+<th>Topic</th>
+<th>Direction</th>
+<th>Payload</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>home/sensors/bathroom/door/state</code></td>
+<td>ESP → HA</td>
+<td><code>open</code> / <code>closed</code></td>
+<td>Retained. Published on change only.</td>
+</tr>
+<tr>
+<td><code>home/sensors/bathroom/temp/state</code></td>
+<td>ESP → HA</td>
+<td>Float °F</td>
+<td>Retained. Published every 2 seconds.</td>
+</tr>
+<tr>
+<td><code>home/sensors/bathroom/humidity/state</code></td>
+<td>ESP → HA</td>
+<td>Float %RH</td>
+<td>Retained. Published every 2 seconds.</td>
+</tr>
+</tbody>
+</table>
+<p>All topics configured manually in the HA MQTT integration UI — no MQTT discovery. Client ID is <code>bathroom-esp</code>.</p>
+<hr />
+<h2>State Machine</h2>
+<p>The bathroom is always in one of three states, tracked in Home Assistant via <code>input_text.bathroom_state</code>. Sensors trigger transitions; automations act on the result.</p>
+<pre><code>   ┌─────────────────────────────────────────────────────────┐
+   │                                                         │
+   ▼    door opens (state = Empty)                           │
+┌──────┐ ─────────────────────────► ┌──────┐                │
+│Empty │                            │ Full │                │
+│      │ ◄───────────────────────── │      │                │
+└──────┘  door opens (state ≠ Empty) └──────┘                │
+                                       │  ▲                  │
+                         humidity &gt;50% │  │ humidity &lt;50%    │
+                                       ▼  │                  │
+                                    ┌────────┐               │
+                                    │ Shower │               │
+                                    └────────┘               │
+                                         │  door opens       │
+                                         └───────────────────┘
+</code></pre>
+<p><strong>Empty</strong> — bathroom unoccupied, light off. The only way to enter this state is via a door open event (from Full or Shower) or the Sleep automation timeout.</p>
+<p><strong>Full</strong> — someone is in the bathroom, light on. Entered when the door opens from Empty. Humidity rising above 50% promotes to Shower; dropping back below 50% returns to Full.</p>
+<p><strong>Shower</strong> — active shower detected. The 1-hour light timeout (Sleep automation) does not fire in this state. Opening the door while in Shower jumps directly to Empty and turns the light off — consistent with the Exit automation's "state ≠ Empty" condition, which catches both Full and Shower.</p>
+<h3>Dual-trigger door pattern</h3>
+<p>Both the Enter and Exit automations trigger on the same event — <code>binary_sensor</code> transitioning to <code>on</code> (door opening). The distinction is entirely in the condition:</p>
+<ul>
+<li><strong>Enter:</strong> only runs when state is <code>Empty</code> → turns light on, sets state to <code>Full</code></li>
+<li><strong>Exit:</strong> only runs when state is not <code>Empty</code> → turns light off, sets state to <code>Empty</code></li>
+</ul>
+<p>When the door opens, Home Assistant evaluates both automations. Only one condition can be true at a time, so exactly one fires. This is more direct than using separate <code>on</code>/<code>off</code> triggers for open and close.</p>
+<hr />
+<h2>Home Assistant Integration</h2>
+<h3>Entities</h3>
+<table>
+<thead>
+<tr>
+<th>Entity</th>
+<th>Type</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>binary_sensor.bathroom_esp_thermo_door_sensor_bathroom</code></td>
+<td>Binary Sensor</td>
+<td>Door — triggers Enter and Exit</td>
+</tr>
+<tr>
+<td><code>sensor.bathroom_esp_thermo_humidity_sensor_bathroom</code></td>
+<td>Sensor</td>
+<td>Humidity — triggers Shower and Unshower</td>
+</tr>
+<tr>
+<td><code>input_text.bathroom_state</code></td>
+<td>Input Text</td>
+<td>State register — <code>Empty</code>, <code>Full</code>, <code>Shower</code></td>
+</tr>
+<tr>
+<td><code>light.bathroom_light</code></td>
+<td>Light</td>
+<td>Used to turn the light <strong>on</strong></td>
+</tr>
+<tr>
+<td><code>switch.bathroom_light_switch</code></td>
+<td>Switch</td>
+<td>Used to turn the light <strong>off</strong> and in the Sleep trigger</td>
+</tr>
+</tbody>
+</table>
+<p><code>light.bathroom_light</code> and <code>switch.bathroom_light_switch</code> are two separate HA entities that map to the same physical wall switch and smart flipper. The reason for the split is unclear, but both work reliably in their respective automations.</p>
+<h3>Automations</h3>
+<p><strong>Bathroom Enter</strong> — fires on door open when state is <code>Empty</code>. Turns on <code>light.bathroom_light</code>, sets state to <code>Full</code>.</p>
+<p><strong>Bathroom Exit</strong> — fires on door open when state is not <code>Empty</code> (catches both <code>Full</code> and <code>Shower</code>). Sets state to <code>Empty</code>, turns off <code>light.bathroom_light</code>.</p>
+<p><strong>Bathroom Shower</strong> — fires when humidity crosses above 50%. No condition. Sets state to <code>Shower</code>. This can happen from either <code>Full</code> or <code>Empty</code> — if someone turns on a hot shower before stepping in, the state will update regardless.</p>
+<p><strong>Bathroom Unshower</strong> — fires when humidity drops back below 50%. No condition. Sets state to <code>Full</code>. Does not touch the light — the assumption is someone is still in the bathroom post-shower.</p>
+<p><strong>Bathroom Sleep</strong> — fires when <code>switch.bathroom_light_switch</code> has been on continuously for 1 hour, provided state is not <code>Shower</code>. Turns off the switch and resets state to <code>Empty</code>. Covers the case where someone slipped out without the door sensor catching it, or left the light on manually. Intentionally suppressed during Shower state to avoid cutting the light mid-shower regardless of duration.</p>
+<h3>Manual Override</h3>
+<p>Manual changes to the light don't require explicit handling. The door and humidity events are the source of truth — whatever state the light is in, the next sensor event will correct it. For example: if someone turns the light off manually and then opens the door to leave, the Exit automation sets state to <code>Empty</code> and tries to turn the light off, which is already off — no issue. If they turn it back on after leaving and then close the door, Sleep will eventually clean it up after an hour.</p>
+<hr />
+<h2>Known Limitations</h2>
+<p><strong>Door-closed assumption.</strong> The Enter automation only fires when state is <code>Empty</code>. If someone leaves the bathroom without closing the door, the state stays <code>Full</code> indefinitely — the next door open will trigger Exit (since state ≠ Empty) rather than Enter, turning the light off as if they're leaving. This is usually the right behavior but can produce unexpected results if the bathroom is left with the door open for extended periods.</p>
+<hr />
+<h2>Future Work</h2>
+<p><strong>Exhaust fan automation (hardware-ready).</strong> A servo motor is mounted in a custom 3D-printed wall switch cover that replaces the existing fan light switch plate. The CAD is complete and the hardware is physically installed. Firmware is not yet written — the servo will actuate the fan based on humidity, reusing the DHT11 readings already publishing from the ESP. The existing Shower state is the natural trigger.</p>
+<p><strong>VOC sensor.</strong> A volatile organic compound sensor would enable odor detection independent of humidity — a separate trigger for the fan that doesn't require a shower to be running.</p>
+<p><strong>Automated air freshener.</strong> Paired with the VOC sensor, a small actuator or relay would trigger an air freshener spray. Likely driven from the same ESP or a small satellite microcontroller, publishing to a new MQTT topic and handled by a dedicated HA automation.</p>
+<hr />
+<h2>Tech Stack</h2>
+<table>
+<thead>
+<tr>
+<th>Layer</th>
+<th>Technology</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Microcontroller</td>
+<td>ESP8266</td>
+</tr>
+<tr>
+<td>Firmware</td>
+<td>Arduino (C++)</td>
+</tr>
+<tr>
+<td>Sensors</td>
+<td>DHT11, magnetic reed switch</td>
+</tr>
+<tr>
+<td>Networking</td>
+<td>ESP8266WiFi, PubSubClient</td>
+</tr>
+<tr>
+<td>Messaging</td>
+<td>MQTT (Mosquitto broker)</td>
+</tr>
+<tr>
+<td>Smart home</td>
+<td>Home Assistant, MQTT integration (manual)</td>
+</tr>
+<tr>
+<td>Light control</td>
+<td>Smart flipper on physical wall switch</td>
+</tr>
+</tbody>
+</table>
+  </div>
+
+</main>
+
+</body>
+</html>

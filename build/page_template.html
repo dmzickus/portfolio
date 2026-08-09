@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>{{TITLE}}</title>
+<meta name="description" content="{{META_DESCRIPTION}}" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="{{ASSET_PREFIX}}assets/style.css" />
+</head>
+<body>
+
+<nav class="site-nav">
+  <a class="nav-logo" href="{{HOME_HREF}}">Dylan Zickus</a>
+  <ul class="nav-links">
+{{NAV_LINKS}}
+  </ul>
+</nav>
+
+{{BREADCRUMB}}
+
+<header class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-content">
+    <div class="eyebrow">{{EYEBROW}}</div>
+    <h1>{{HEADING}}</h1>
+    <p class="hero-desc">{{DESCRIPTION}}</p>
+{{PILLS}}
+  </div>
+</header>
+
+<main class="main narrow">
+  <div class="md-body">
+{{BODY}}
+  </div>
+{{SECTION_GRID}}
+</main>
+
+</body>
+</html>

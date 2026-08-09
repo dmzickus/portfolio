@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>VPN &amp; Downloading — Dylan Zickus</title>
+<meta name="description" content="How Gluetun creates a container-level WireGuard tunnel that the entire download stack shares. AirVPN, port forwarding, kill switch behavior, and Docker network namespaces." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body>
+
+<nav class="site-nav">
+  <a class="nav-logo" href="../index.html">Dylan Zickus</a>
+  <ul class="nav-links">
+    <li><a href="../index.html">Home</a></li>
+    <li><a href="../smart-home-projects/index.html">Smart Home</a></li>
+    <li><a href="../bathroom-esp/index.html">Bathroom ESP</a></li>
+    <li><a href="../living-room-led/index.html">LED Strip</a></li>
+    <li><a href="../alarm-system-keypad/index.html">Alarm</a></li>
+    <li><a href="../smart-switch-mount/index.html">Switch Mount</a></li>
+    <li><a href="../egg-timer/index.html">Egg Timer</a></li>
+    <li><a href="../ct-clamp-project/index.html">CT Clamp</a></li>
+    <li><a href="index.html" class="active">Media Stack</a></li>
+    <li><a href="../overengineered-clock/index.html">Clock</a></li>
+  </ul>
+</nav>
+
+<div class="breadcrumb">
+  <a href="../index.html">dylanzickus.com</a> <span class="sep">/</span> <a href="index.html">Self-Hosted Media Stack</a> <span class="sep">/</span> <span class="current">VPN &amp; Downloading</span>
+</div>
+
+<header class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-content">
+    <div class="eyebrow">dylanzickus.com  /  VPN &amp; Downloading</div>
+    <h1>VPN &amp; Downloading</h1>
+    <p class="hero-desc">How Gluetun creates a container-level WireGuard tunnel that the entire download stack shares. AirVPN, port forwarding, kill switch behavior, and Docker network namespaces.</p>
+
+  </div>
+</header>
+
+<main class="main narrow">
+  <div class="md-body">
+<blockquote>
+<p>All download traffic routes through an encrypted VPN tunnel. Here's how that works and why it's set up the way it is.</p>
+</blockquote>
+<h2>Why Route Downloads Through a VPN?</h2>
+<p>Running a download pipeline without a VPN exposes your IP address to every torrent swarm you connect to. That's a privacy concern and, depending on what's being downloaded, a legal one. A VPN ensures that the IP address visible to peers and to your ISP is the VPN provider's, not yours.</p>
+<p>The implementation has to be done carefully though. A naive setup — "just run a VPN on the host" — creates several problems:</p>
+<ul>
+<li>If the VPN drops, traffic falls back to your real IP (a "kill switch" is needed to prevent this)</li>
+<li>Multiple services sharing one system-level VPN can interfere with each other</li>
+<li>Port forwarding for qBittorrent (needed for good peer connectivity) has to be managed at the VPN provider level</li>
+</ul>
+<p>The solution used here is <strong>Gluetun</strong> — a container-based VPN client that acts as a network gateway for other containers.</p>
+<hr />
+<h2>Gluetun: Container-Based VPN Gateway</h2>
+<p>Gluetun is a Docker container that establishes and maintains a WireGuard (or OpenVPN) tunnel and exposes it as a network namespace that other containers can join. Instead of every container managing its own VPN connection, they all share Gluetun's tunnel.</p>
+<p>The key Docker Compose configuration:</p>
+<pre><code class="language-yaml"># Gluetun establishes the tunnel
+gluetun:
+  image: qmcgaw/gluetun
+  cap_add:
+    - NET_ADMIN
+  devices:
+    - /dev/net/tun:/dev/net/tun
+  environment:
+    - VPN_SERVICE_PROVIDER=airvpn
+    - VPN_TYPE=wireguard
+    - SERVER_CITIES=Alblasserdam
+    # ... AirVPN credentials and WireGuard keys
+
+# Other containers join Gluetun's network namespace
+qbittorrent:
+  network_mode: &quot;service:gluetun&quot;
+  # This container has NO direct network access — only through Gluetun
+
+radarr:
+  network_mode: &quot;service:gluetun&quot;
+
+sonarr:
+  network_mode: &quot;service:gluetun&quot;
+
+lidarr:
+  network_mode: &quot;service:gluetun&quot;
+
+bazarr:
+  network_mode: &quot;service:gluetun&quot;
+</code></pre>
+<p><code>network_mode: "service:gluetun"</code> means the container shares Gluetun's network namespace entirely — it has the same IP, the same interfaces, and the same routing. If Gluetun's tunnel drops, those containers lose network access completely. There's no fallback to the host network. That's the kill switch.</p>
+<p><strong>Prowlarr and Flaresolverr</strong> are excluded from the VPN tunnel — they need to reach indexer websites and work better with a direct connection for that purpose. Only traffic from the actual download client (qBittorrent) strictly needs VPN protection; the indexing layer is less sensitive.</p>
+<hr />
+<h2>AirVPN &amp; WireGuard</h2>
+<p><strong>AirVPN</strong> is the VPN provider. Reasons for choosing it over alternatives:</p>
+<ul>
+<li><strong>Port forwarding support</strong> — critical for qBittorrent (see below). Many VPN providers have dropped port forwarding support. AirVPN still offers it.</li>
+<li><strong>WireGuard support</strong> — WireGuard is significantly faster and more reliable than OpenVPN, with a simpler codebase and better cryptography</li>
+<li><strong>Static forwarded port</strong> — AirVPN assigns a fixed forwarded port that doesn't change, which means the qBittorrent port configuration is set once and stays correct</li>
+<li><strong>No logging</strong> policy</li>
+</ul>
+<p>The WireGuard configuration is locked to <strong>Alblasserdam</strong> (Netherlands) with a static tunnel IP of <code>10.162.38.114</code>. Pinning to a specific city ensures the forwarded port assignment stays valid — forwarded ports are tied to specific servers, and if the VPN connection roams to a different city the port assignment breaks.</p>
+<hr />
+<h2>Port Forwarding for qBittorrent</h2>
+<p>BitTorrent peer connectivity works best when you have an <strong>open inbound port</strong>. Without one, you're in "passive" mode — you can connect to peers who are listening, but peers can't connect to you. This cuts you off from a large portion of the swarm and hurts both download speeds and upload ratios.</p>
+<p>AirVPN assigns a forwarded port (<code>24618</code> in this setup) that maps inbound connections on that port at the VPN server to the tunnel IP. Gluetun is configured to expose this port, and qBittorrent is configured to listen on it. The result: peers can reach qBittorrent through the VPN, as if it had a public IP.</p>
+<pre><code>Peer → AirVPN server:24618 → WireGuard tunnel → Gluetun → qBittorrent
+</code></pre>
+<p>Without this, qBittorrent would still work, but speeds and connectivity would be noticeably worse.</p>
+<hr />
+<h2>Network Topology Inside Docker</h2>
+<p>Because multiple containers share Gluetun's network namespace, they all appear on the same "virtual host" from Docker's perspective. This has an important implication: <strong>containers in the VPN group communicate with each other via <code>localhost</code></strong>, not via Docker's internal DNS (container names).</p>
+<p>For example, Radarr reaching qBittorrent uses <code>localhost:8080</code>, not <code>qbittorrent:8080</code>. This tripped me up initially — the standard Docker networking advice (use container names as hostnames) doesn't apply inside a shared network namespace.</p>
+<p>Services that need to be reachable from <em>outside</em> the VPN group (like Jellyfin accessing the arr stack's APIs) use Gluetun's port mapping to expose specific ports on the host.</p>
+<hr />
+<h2>Lessons Learned</h2>
+<p><strong><code>network_mode: service:gluetun</code> is elegant but has sharp edges.</strong> The shared namespace is a clean solution until you hit the "use localhost not container names" issue or need to debug why a service can't reach the network. <code>docker exec</code> into a container and <code>curl ifconfig.me</code> to confirm traffic is going through the tunnel — that single check saves a lot of confusion.</p>
+<p><strong>Pin your VPN city if you're using forwarded ports.</strong> AirVPN's port forwarding is server-specific. Letting the VPN client pick any server means the forwarded port will stop working whenever it connects to a different city. Lock it down.</p>
+<p><strong>WireGuard over OpenVPN if you have the choice.</strong> WireGuard reconnects after network disruptions almost instantly (sub-second in practice). OpenVPN can take 30–60 seconds to re-establish. On a machine that occasionally loses connectivity, this matters — the arr stack can't do anything while the tunnel is down.</p>
+  </div>
+
+</main>
+
+</body>
+</html>

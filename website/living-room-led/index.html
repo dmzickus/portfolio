@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Living Room LED Strip — Dylan Zickus</title>
+<meta name="description" content="Desoldered the IR receiver off a salvaged LED strip and wired it to an ESP for full RGB MQTT control. Per-channel color correction to fix hardware imbalance." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body>
+
+<nav class="site-nav">
+  <a class="nav-logo" href="../index.html">Dylan Zickus</a>
+  <ul class="nav-links">
+    <li><a href="../index.html">Home</a></li>
+    <li><a href="../smart-home-projects/index.html">Smart Home</a></li>
+    <li><a href="../bathroom-esp/index.html">Bathroom ESP</a></li>
+    <li><a href="index.html" class="active">LED Strip</a></li>
+    <li><a href="../alarm-system-keypad/index.html">Alarm</a></li>
+    <li><a href="../smart-switch-mount/index.html">Switch Mount</a></li>
+    <li><a href="../egg-timer/index.html">Egg Timer</a></li>
+    <li><a href="../ct-clamp-project/index.html">CT Clamp</a></li>
+    <li><a href="../media-stack/index.html">Media Stack</a></li>
+    <li><a href="../overengineered-clock/index.html">Clock</a></li>
+  </ul>
+</nav>
+
+<div class="breadcrumb">
+  <a href="../index.html">dylanzickus.com</a> <span class="sep">/</span> <span class="current">Living Room LED Strip</span>
+</div>
+
+<header class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-content">
+    <div class="eyebrow">dylanzickus.com  /  Living Room LED Strip</div>
+    <h1>Living Room LED Strip</h1>
+    <p class="hero-desc">Desoldered the IR receiver off a salvaged LED strip and wired it to an ESP for full RGB MQTT control. Per-channel color correction to fix hardware imbalance.</p>
+
+  </div>
+</header>
+
+<main class="main narrow">
+  <div class="md-body">
+<h2>Overview</h2>
+<p>Ambient RGB LED accent lighting for the living room, controlled entirely through Home Assistant. The strip responds to on/off toggles, brightness sliders, and full RGB color picking — all from the HA dashboard or any automation. The project started as a simple hardware experiment and evolved into a fully integrated smart home device through several distinct iterations, each one teaching something new about embedded development, MQTT, and the realities of working with real hardware.</p>
+<hr />
+<h2>Hardware</h2>
+<ul>
+<li><strong>Microcontroller:</strong> ESP8266 (NodeMCU)</li>
+<li><strong>LED strip:</strong> Analog RGB strip, common anode (5V shared positive rail)</li>
+<li><strong>Wiring:</strong> 4-pin direct connection — 5V to the strip's common anode, and each of the R, G, B pins tied directly to GPIO pins on the ESP (D7/GPIO15, D8/GPIO13, D6/GPIO12)</li>
+<li><strong>Power switch:</strong> An inline switch on the 5V line, serving double duty: it lets you cut power to the strip cleanly, and — critically — it lets you drop the GPIO pins to a safe state before flashing new firmware, since the ESP8266 won't accept uploads if those pins are being driven</li>
+</ul>
+<p>No transistors, MOSFETs, or driver boards. The ESP's GPIO pins drive the strip directly, which works for a low-current analog strip at this scale.</p>
+<hr />
+<h2>Iteration History</h2>
+<h3>Stage 1 — Proof of Concept (<code>led_strip_basic_colors.ino</code>)</h3>
+<p>The very first firmware did one thing: cycle through red, green, and blue using PWM <code>analogWrite</code> calls in a loop. No networking, no control — just confirming that the hardware was wired correctly and the ESP could drive the strip at all.</p>
+<pre><code class="language-cpp">for (int i = 0; i &lt;= 255; i++) {
+  analogWrite(r, i);
+  delay(20);
+}
+digitalWrite(r, HIGH); // FANCY PANTS
+</code></pre>
+<p>The <code>// FANCY PANTS</code> comment in the source says it all. This was the "does it work?" stage.</p>
+<hr />
+<h3>Stage 2 — MQTT Control, No HA (<code>led_mqtt_works_no_ha_yet.ino</code>)</h3>
+<p>With basic hardware confirmed, the next step was adding WiFi and MQTT. The ESP connects to a local Mosquitto broker, subscribes to three command topics, and publishes retained state back on all three:</p>
+<table>
+<thead>
+<tr>
+<th>Topic</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>home/lights/living_room/led/command</code></td>
+<td>ON / OFF</td>
+</tr>
+<tr>
+<td><code>home/lights/living_room/led/brightness/command</code></td>
+<td>0–100 integer</td>
+</tr>
+<tr>
+<td><code>home/lights/living_room/led/rgb/command</code></td>
+<td><code>R,G,B</code> comma-separated string</td>
+</tr>
+</tbody>
+</table>
+<p>Two hardware realities surfaced here that required firmware workarounds:</p>
+<p><strong>Inverted PWM.</strong> Because the strip is common anode, the logic is backwards from what you'd expect — pulling a pin LOW turns the channel <em>on</em>, not off. The fix is a one-liner inversion in the <code>ledWrite</code> helper:</p>
+<pre><code class="language-cpp">void ledWrite(int pin, int val) {
+  int newVal = val * ((float) brightness / 100.0);
+  newVal = 255 - newVal; // Invert: common anode wiring
+  analogWrite(pin, newVal);
+}
+</code></pre>
+<p>This wasn't anticipated upfront — the strip was wired, powered on, and immediately behaved backwards. The inversion was the diagnosis and fix.</p>
+<p><strong>Retained state on reconnect.</strong> If the ESP drops WiFi or the broker restarts, it re-publishes its last known state on reconnect so Home Assistant never gets out of sync:</p>
+<pre><code class="language-cpp">client.publish(state_topic, lightOn ? &quot;ON&quot; : &quot;OFF&quot;, true);
+client.publish(brightness_state_topic, String(brightness).c_str(), true);
+client.publish(rgb_state_topic, rgb, true);
+</code></pre>
+<p>At this stage everything worked end-to-end over MQTT — controllable from any MQTT client — but Home Assistant wasn't in the picture yet.</p>
+<hr />
+<h3>Stage 3 — Final Firmware + HA Integration (<code>led_living_room_final.ino</code>)</h3>
+<p>The final firmware added one more correction discovered during real-world use: the green and blue channels appeared significantly brighter than red at the same PWM value, making color mixing noticeably off. The fix was a channel-specific attenuation:</p>
+<pre><code class="language-cpp">void ledWrite(int pin, int val) {
+  if (pin == gPin || pin == bPin) val /= 4; // Balance against red
+  int newVal = val * ((float) brightness / 100.0);
+  newVal = 255 - newVal;
+  analogWrite(pin, newVal);
+}
+</code></pre>
+<p>The <code>/4</code> factor was arrived at through trial and error — eyeballing colors until white looked actually white and reds didn't look pink. The trade-off is that the overall maximum brightness is lower than it would be without correction, since green and blue are now capped at 25% of their hardware maximum. Acceptable for accent lighting; worth noting for anyone reproducing this.</p>
+<p><strong>Home Assistant integration</strong> was done manually through the HA MQTT integration UI rather than MQTT discovery (which proved difficult to get working reliably). Each channel was configured by hand — telling HA which topics to publish commands to, which topics to read state from, and what payload conventions to expect. The result is a first-class HA light entity with full on/off, brightness, and RGB color support visible in the dashboard and available to any automation.</p>
+<hr />
+<h2>Architecture Diagram</h2>
+<pre><code>┌─────────────────────────────────┐
+│        Home Assistant           │
+│  (Light entity: Living Room LED)│
+│  - Toggle on/off                │
+│  - Brightness slider (0–100)    │
+│  - RGB color picker             │
+└────────────┬────────────────────┘
+             │ MQTT publish/subscribe
+             ▼
+┌─────────────────────────────────┐
+│     Mosquitto MQTT Broker       │
+│     (running on local server)   │
+└────────────┬────────────────────┘
+             │
+             ▼
+┌─────────────────────────────────┐
+│         ESP8266 (NodeMCU)       │
+│  - Subscribes to command topics │
+│  - Publishes retained state     │
+│  - PWM output with inversion    │
+│    and per-channel correction   │
+└────────────┬────────────────────┘
+             │ GPIO PWM (D6, D7, D8)
+             ▼
+┌─────────────────────────────────┐
+│      Analog RGB LED Strip       │
+│      Common anode, 5V           │
+└─────────────────────────────────┘
+</code></pre>
+<hr />
+<h2>What Works</h2>
+<ul>
+<li>On/off, brightness, and full RGB color control from Home Assistant</li>
+<li>State persists across ESP reboots and broker reconnects via retained MQTT messages</li>
+<li>Stable WiFi reconnection loop — the device recovers on its own if the network drops</li>
+<li>Color balance correction produces believable whites and accurate-ish hues</li>
+</ul>
+<h2>Known Limitations &amp; Future Work</h2>
+<p><strong>Physical finishing.</strong> The current build is bare wires plugged into a wall outlet. It works, but it gets unplugged accidentally more than it should. The real "done" state involves soldering the connections and putting the ESP into an enclosure.</p>
+<p><strong>Color effects / scenes.</strong> Simple color-cycling or fade effects were attempted but not implemented in firmware. The challenge was that smooth animation requires either non-blocking timing logic (using <code>millis()</code> instead of <code>delay()</code>) or interrupt-driven approaches — neither of which was in the toolkit at the time. The silver lining: Home Assistant's native scene and script system handles this on the HA side without any firmware changes, so the gap is less painful than it sounds.</p>
+<p><strong>Brightness trade-off from color correction.</strong> The <code>/4</code> attenuation on green and blue means the strip never hits its true maximum brightness. For living room accent lighting this is fine, but it's a pragmatic fix rather than a calibrated one. A proper solution would measure each channel with a light meter and apply gamma-corrected lookup tables.</p>
+<hr />
+<h2>Tech Stack</h2>
+<table>
+<thead>
+<tr>
+<th>Layer</th>
+<th>Technology</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Microcontroller</td>
+<td>ESP8266 (NodeMCU)</td>
+</tr>
+<tr>
+<td>Firmware</td>
+<td>Arduino (C++)</td>
+</tr>
+<tr>
+<td>Networking</td>
+<td>ESP8266WiFi, PubSubClient</td>
+</tr>
+<tr>
+<td>Messaging</td>
+<td>MQTT (Mosquitto broker)</td>
+</tr>
+<tr>
+<td>Smart home</td>
+<td>Home Assistant, MQTT integration</td>
+</tr>
+<tr>
+<td>Hardware</td>
+<td>Analog RGB LED strip, common anode</td>
+</tr>
+</tbody>
+</table>
+  </div>
+
+</main>
+
+</body>
+</html>

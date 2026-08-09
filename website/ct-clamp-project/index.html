@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>CT Clamp Appliance Monitor — Dylan Zickus</title>
+<meta name="description" content="Non-invasive current sensing for washer/dryer/dishwasher done notifications. Validated circuit on oscilloscope; blocked by ESP ADC noise — pivoting to Arduino ADC." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body>
+
+<nav class="site-nav">
+  <a class="nav-logo" href="../index.html">Dylan Zickus</a>
+  <ul class="nav-links">
+    <li><a href="../index.html">Home</a></li>
+    <li><a href="../smart-home-projects/index.html">Smart Home</a></li>
+    <li><a href="../bathroom-esp/index.html">Bathroom ESP</a></li>
+    <li><a href="../living-room-led/index.html">LED Strip</a></li>
+    <li><a href="../alarm-system-keypad/index.html">Alarm</a></li>
+    <li><a href="../smart-switch-mount/index.html">Switch Mount</a></li>
+    <li><a href="../egg-timer/index.html">Egg Timer</a></li>
+    <li><a href="index.html" class="active">CT Clamp</a></li>
+    <li><a href="../media-stack/index.html">Media Stack</a></li>
+    <li><a href="../overengineered-clock/index.html">Clock</a></li>
+  </ul>
+</nav>
+
+<div class="breadcrumb">
+  <a href="../index.html">dylanzickus.com</a> <span class="sep">/</span> <span class="current">CT Clamp Appliance Monitor</span>
+</div>
+
+<header class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-content">
+    <div class="eyebrow">dylanzickus.com  /  CT Clamp Appliance Monitor</div>
+    <h1>CT Clamp Appliance Monitor</h1>
+    <p class="hero-desc">Non-invasive current sensing for washer/dryer/dishwasher done notifications. Validated circuit on oscilloscope; blocked by ESP ADC noise — pivoting to Arduino ADC.</p>
+
+  </div>
+</header>
+
+<main class="main narrow">
+  <div class="md-body">
+<h2>Overview</h2>
+<p>The goal of this project is to turn our "dumb" washer, dryer, and dishwasher into smart appliances. We have a tendency to leave clothes and dishes sitting in them long after the cycles finish, so the objective is to trigger automated notifications when they stop running. </p>
+<p>To achieve this safely and non-invasively, the project uses a CT (current transformer) clamp to measure the magnetic field around the appliance's power lead, allowing us to determine if electricity is flowing without splicing any high-voltage wires.</p>
+<hr />
+<h2>Hardware</h2>
+<ul>
+<li><strong>Sensing:</strong> Non-invasive CT clamp </li>
+<li><strong>Signal Conditioning Circuit:</strong> Custom voltage divider and smoothing capacitor (breadboarded)</li>
+<li><strong>Microcontroller (Initial Testing):</strong> ESP32 (Failed due to poor ADC quality)</li>
+<li><strong>Microcontroller (Planned):</strong> Repurposed Arduino (for superior ADC resolution)</li>
+<li><strong>Testing Equipment:</strong> Oscilloscope (borrowed from ECE roommate)</li>
+</ul>
+<hr />
+<h2>Iteration History</h2>
+<h3>Stage 1 — Proof of Concept &amp; Oscilloscope Validation</h3>
+<p>The first step was proving the sensor could detect a live load. We built a simple signal conditioning circuit using a voltage divider and a capacitor to bring the AC current waveform from the CT clamp into a measurable DC-biased range.</p>
+<p>We hooked the output up to my ECE roommate's oscilloscope and clamped the sensor onto the power cable of a standard box fan. Having the oscilloscope was a huge win for debugging here—it showed a clear, measurable waveform when the fan was powered on. While a fan draws significantly less power than a washer or dryer, the proof of concept was a success.</p>
+<h3>Stage 2 — Microcontroller Integration (The Blocker)</h3>
+<p>With the circuit working, the next logical step was connecting the conditioned analog output to a microcontroller to read the state. We specifically used an ESP32 for this stage in the hopes that it would have a better ADC.</p>
+<p>Unfortunately, no luck. The onboard ADC (Analog-to-Digital Converter) GPIO pins on the ESP32 were of such low quality and high noise that we couldn't get any accurate or reliable readings out of them. The resolution was simply too poor to confidently distinguish between the baseline noise and the appliance's active current draw. Because we couldn't get past this detection phase, the project hasn't been integrated into Home Assistant yet.</p>
+<h3>Stage 3 — The Arduino Pivot &amp; Baseline Testing</h3>
+<p>Instead of buying more external parts (like a dedicated I2C ADC module), the plan is to repurpose an old Arduino. Arduinos are known for having vastly superior and stable ADCs compared to the ESP chips. </p>
+<p>To kick this off, I wrote a simple testing sketch (<code>ct_sensor_test.ino</code>) to dump the raw analog readings to the Serial monitor. This allows us to establish the baseline noise floor and figure out the exact threshold that indicates the appliance is actively drawing power.</p>
+<pre><code class="language-cpp">#define READ A0
+
+void setup() {
+  Serial.begin(115200);
+}
+
+void loop() {
+  Serial.println(analogRead(READ));
+  delay(500);
+  Serial.println(analogRead(READ));
+  delay(500);
+}
+</code></pre>
+<hr />
+<h2>Architecture Diagram (Planned)</h2>
+<pre><code>┌─────────────────────────────────┐
+│       Appliance Power Cord      │
+│  (Washer / Dryer / Dishwasher)  │
+└────────────┬────────────────────┘
+             │ Magnetic Field
+             ▼
+┌─────────────────────────────────┐
+│            CT Clamp             │
+│   (Non-invasive current sensor) │
+└────────────┬────────────────────┘
+             │ Raw AC Voltage
+             ▼
+┌─────────────────────────────────┐
+│    Signal Conditioning Circuit  │
+│ - Voltage Divider               │
+│ - Smoothing Capacitor           │
+└────────────┬────────────────────┘
+             │ DC-Biased Analog Signal
+             ▼
+┌─────────────────────────────────┐
+│        Repurposed Arduino       │
+│  - High-quality ADC             │
+│  - Signal threshold processing  │
+└────────────┬────────────────────┘
+             │ State (Serial/I2C)
+             ▼
+┌─────────────────────────────────┐
+│        ESP Microcontroller      │
+│  - MQTT Client (Planned)        │
+│  - WiFi interface               │
+└────────────┬────────────────────┘
+             │ MQTT Topic
+             ▼
+┌─────────────────────────────────┐
+│         Home Assistant          │
+│  - Push notifications to phones │
+└─────────────────────────────────┘
+</code></pre>
+<hr />
+<h2>Status &amp; Next Steps</h2>
+<p><strong>What Works:</strong>
+- The CT clamp successfully registers load changes.
+- The voltage divider and smoothing capacitor circuit is validated via oscilloscope.</p>
+<p><strong>Known Limitations &amp; Blockers:</strong>
+- ESP32 onboard ADC is too noisy/low-resolution for this specific analog circuit.</p>
+<p><strong>Next Steps:</strong>
+- Wire the circuit output to the repurposed Arduino.
+- Use the testing sketch to measure the analog threshold and determine the binary on/off state.
+- Establish a communication link (Serial or I2C) between the Arduino and an ESP32.
+- Write the MQTT integration on the ESP32 to push the state to Home Assistant.</p>
+<hr />
+<h2>Tech Stack</h2>
+<table>
+<thead>
+<tr>
+<th>Layer</th>
+<th>Technology</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Microcontroller (ADC)</td>
+<td>Arduino (C++)</td>
+</tr>
+<tr>
+<td>Microcontroller (Net)</td>
+<td>ESP32 (Planned)</td>
+</tr>
+<tr>
+<td>Protocol (Planned)</td>
+<td>MQTT</td>
+</tr>
+<tr>
+<td>Smart Home</td>
+<td>Home Assistant</td>
+</tr>
+<tr>
+<td>Hardware</td>
+<td>CT Clamp, Resistors, Capacitors, Breadboard</td>
+</tr>
+</tbody>
+</table>
+  </div>
+
+</main>
+
+</body>
+</html>

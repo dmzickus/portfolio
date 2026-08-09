@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Alarm System Keypad — Dylan Zickus</title>
+<meta name="description" content="Redesigned a 7-pin matrix keypad into a single analog input using a resistor ladder — unique voltage per button. Arm/disarm via PIN and Home Assistant; TV alarm response sequence." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body>
+
+<nav class="site-nav">
+  <a class="nav-logo" href="../index.html">Dylan Zickus</a>
+  <ul class="nav-links">
+    <li><a href="../index.html">Home</a></li>
+    <li><a href="../smart-home-projects/index.html">Smart Home</a></li>
+    <li><a href="../bathroom-esp/index.html">Bathroom ESP</a></li>
+    <li><a href="../living-room-led/index.html">LED Strip</a></li>
+    <li><a href="index.html" class="active">Alarm</a></li>
+    <li><a href="../smart-switch-mount/index.html">Switch Mount</a></li>
+    <li><a href="../egg-timer/index.html">Egg Timer</a></li>
+    <li><a href="../ct-clamp-project/index.html">CT Clamp</a></li>
+    <li><a href="../media-stack/index.html">Media Stack</a></li>
+    <li><a href="../overengineered-clock/index.html">Clock</a></li>
+  </ul>
+</nav>
+
+<div class="breadcrumb">
+  <a href="../index.html">dylanzickus.com</a> <span class="sep">/</span> <span class="current">Alarm System Keypad</span>
+</div>
+
+<header class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-content">
+    <div class="eyebrow">dylanzickus.com  /  Alarm System Keypad</div>
+    <h1>Alarm System Keypad</h1>
+    <p class="hero-desc">Redesigned a 7-pin matrix keypad into a single analog input using a resistor ladder — unique voltage per button. Arm/disarm via PIN and Home Assistant; TV alarm response sequence.</p>
+
+  </div>
+</header>
+
+<main class="main narrow">
+  <div class="md-body">
+<h2>Overview</h2>
+<p>This project was an educational exercise in electronics and microcontroller programming, resulting in an alarm system featuring a keypad, indicator LEDs, a buzzer, and a magnetic door sensor[cite: 1, 2]. Though the system worked effectively—including virtual arming/disarming and alerts via Home Assistant—it was never permanently installed. The breadboard circuit eventually came apart, and planned features, such as a deadbolt motor, were ultimately not realized.</p>
+<hr />
+<h2>Hardware</h2>
+<ul>
+<li><strong>Microcontroller:</strong> ESP8266 / ESP32</li>
+<li><strong>Keypad:</strong> Transitioned from a 7-pin digital matrix[cite: 1] to a 1-pin analog resistor ladder[cite: 2]</li>
+<li><strong>Sensors:</strong> Magnetic door reed switch using internal pull-up[cite: 2, 3]</li>
+<li><strong>Indicators:</strong> Green, Red, and Yellow LEDs[cite: 1, 2]</li>
+<li><strong>Audio:</strong> Passive Buzzer[cite: 1, 2]</li>
+</ul>
+<p>The hardware evolved significantly to accommodate microcontroller limitations. Initially relying on 7 distinct GPIO pins for a standard matrix keypad[cite: 1], the system was redesigned to utilize resistor math, allowing the entire keypad to be read through a single analog pin[cite: 2].</p>
+<hr />
+<h2>Iteration History</h2>
+<h3>Stage 1 — Digital Matrix Keypad (<code>simple_alarm.ino</code>)</h3>
+<p>The initial prototype used a standard digital scanning method to read the keypad[cite: 1]. The firmware utilized the standard <code>Keypad.h</code> library to map a 4-row by 3-column matrix layout[cite: 1]. </p>
+<pre><code class="language-cpp">const byte ROWS = 4;
+const byte COLS = 3;
+byte rowPins[ROWS] = {5, 4, 0, 2};
+byte colPins[COLS] = {14, 12, 13};
+Keypad keypad = Keypad(makeKeymap(keys), rowPins, colPins, ROWS, COLS);
+</code></pre>
+<p>This matrix required a total of 7 GPIO pins mapped to the microcontroller[cite: 1]. Because the standard method sequentially pulses input lanes and listens on output lanes, it consumed too many pins and severely limited the small microcontroller.</p>
+<hr />
+<h3>Stage 2 — Analog Resistor Keypad (<code>alarm_panel.ino</code>)</h3>
+<p>To conserve GPIO pins, the keypad was redesigned using resistor math to output a specific analog voltage for each button press, condensed down to a single analog input on pin 13[cite: 2]. </p>
+<p><strong>Analog Threshold Mapping.</strong> The microcontroller read the analog voltage and mapped it against an array of 16 descending threshold values[cite: 2]. These values started from 4097 down to 220[cite: 2].</p>
+<pre><code class="language-cpp">int value = analogRead(keypad_pin);
+if (value != 0) {
+  for (int i = 15; i &gt;= 0; i--) {
+    if (value &lt; values[i]) {
+      readSymbol(symbols[i]);
+      value = 5000; // Break out
+    }
+  }
+}
+</code></pre>
+<p>While this method worked perfectly for individual presses mapping exact symbols, the physical nature of the resistor logic caused unexpected behavior when multiple keys were pressed simultaneously.</p>
+<hr />
+<h3>Stage 3 — Sensor Diagnostics (<code>basic_reed_sensor.ino</code>)</h3>
+<p>During development, a simple diagnostic script was used to verify sensor behavior.
+*   The script monitored a sensor connected to pin 13 configured with an internal pull-up resistor (<code>INPUT_PULLUP</code>)[cite: 3].
+*   It tracked the digital state of the sensor and printed the result to the serial monitor at continuous 100-millisecond intervals[cite: 3].</p>
+<hr />
+<h2>Architecture Diagram</h2>
+<pre><code class="language-text">┌─────────────────────────────────┐
+│         Resistor Keypad         │
+│  16 buttons mapped to voltages  │
+└────────────┬────────────────────┘
+             │ Analog Input (Pin 13)
+             ▼
+┌─────────────────────────────────┐
+│         Microcontroller         │
+│  - Threshold parsing[cite: 2]  │
+│  - State management (Armed)     │
+└────────────┬────────────────────┘
+             │ Digital Outputs
+             ▼
+┌─────────────────────────────────┐
+│         Status &amp; Audio          │
+│  Green/Red/Yellow LEDs[cite: 2]│
+│  Passive Buzzer[cite: 2]       │
+└─────────────────────────────────┘
+</code></pre>
+<hr />
+<h2>What Works</h2>
+<ul>
+<li>Analog threshold mapping successfully detects all 16 unique individual button presses[cite: 2].</li>
+<li>Virtual arming, disarming, and alert notifications through Home Assistant integrations.</li>
+</ul>
+<h2>Known Limitations &amp; Future Work</h2>
+<p><strong>Stacked Voltages.</strong> Combinations of multiple buttons pressed simultaneously trigger unexpected behavior due to stacked voltages in the resistor ladder.
+<strong>Physical finishing.</strong> The circuit was purely a breadboard prototype. It was never permanently installed or soldered, and eventually fell apart. Planned features, like a motorized deadbolt lock, were never built.</p>
+<hr />
+<h2>Tech Stack</h2>
+<table>
+<thead>
+<tr>
+<th>Layer</th>
+<th>Technology</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Microcontroller</td>
+<td>ESP8266 / ESP32</td>
+</tr>
+<tr>
+<td>Firmware</td>
+<td>Arduino (C++) — Keypad.h[cite: 1]</td>
+</tr>
+<tr>
+<td>Inputs</td>
+<td>Matrix Keypad, Magnetic Reed Switch[cite: 1, 2]</td>
+</tr>
+<tr>
+<td>Outputs</td>
+<td>Green, Red, Yellow LEDs, Passive Buzzer[cite: 1, 2]</td>
+</tr>
+</tbody>
+</table>
+  </div>
+
+</main>
+
+</body>
+</html>

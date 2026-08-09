@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>3D-Printed Switch Mount — Dylan Zickus</title>
+<meta name="description" content="Custom enclosure over the wall switch housing an ESP32 and rotary encoder. Sends relative commands to HA instead of tracking absolute state — key architectural lesson." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body>
+
+<nav class="site-nav">
+  <a class="nav-logo" href="../index.html">Dylan Zickus</a>
+  <ul class="nav-links">
+    <li><a href="../index.html">Home</a></li>
+    <li><a href="../smart-home-projects/index.html">Smart Home</a></li>
+    <li><a href="../bathroom-esp/index.html">Bathroom ESP</a></li>
+    <li><a href="../living-room-led/index.html">LED Strip</a></li>
+    <li><a href="../alarm-system-keypad/index.html">Alarm</a></li>
+    <li><a href="index.html" class="active">Switch Mount</a></li>
+    <li><a href="../egg-timer/index.html">Egg Timer</a></li>
+    <li><a href="../ct-clamp-project/index.html">CT Clamp</a></li>
+    <li><a href="../media-stack/index.html">Media Stack</a></li>
+    <li><a href="../overengineered-clock/index.html">Clock</a></li>
+  </ul>
+</nav>
+
+<div class="breadcrumb">
+  <a href="../index.html">dylanzickus.com</a> <span class="sep">/</span> <span class="current">3D-Printed Switch Mount</span>
+</div>
+
+<header class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-content">
+    <div class="eyebrow">dylanzickus.com  /  3D-Printed Switch Mount</div>
+    <h1>3D-Printed Switch Mount</h1>
+    <p class="hero-desc">Custom enclosure over the wall switch housing an ESP32 and rotary encoder. Sends relative commands to HA instead of tracking absolute state — key architectural lesson.</p>
+
+  </div>
+</header>
+
+<main class="main narrow">
+  <div class="md-body">
+<h2>Overview</h2>
+<p>Smart bulbs introduce a frustrating physical limitation: the wall switch must remain permanently "on" to keep the bulbs powered. This forces you to rely entirely on an app or voice assistant to control the lights, which is highly inconvenient when walking into a pitch-black room. </p>
+<p>To solve this, my roommate and I designed a custom 3D-printed mount that fits directly over the existing light switch. Inside, an ESP32 paired with a rotary encoder and a DHT11 temperature/humidity sensor restores physical control over the smart bulbs without cutting their power, communicating directly with Home Assistant over MQTT.</p>
+<hr />
+<h2>Hardware</h2>
+<ul>
+<li><strong>Microcontroller:</strong> ESP32</li>
+<li><strong>Input:</strong> Rotary Encoder (CLK on GPIO 14, DT on GPIO 27, SW on GPIO 26)</li>
+<li><strong>Sensor:</strong> DHT11 Temperature and Humidity Sensor (GPIO 4)</li>
+<li><strong>Enclosure:</strong> Custom 3D-printed mount designed to cover a standard wall switch.</li>
+</ul>
+<hr />
+<h2>Iteration History</h2>
+<h3>Stage 1 — Hardware Validation &amp; LCD Debugging (<code>rotary_lcd_working.ino</code>)</h3>
+<p>The first challenge was reliably reading the rotary encoder without hardware interrupts and debouncing the built-in push button. Early iterations outputted the encoder position and button state to a 16x2 I2C LCD screen for immediate visual debugging before introducing any networking complexity.</p>
+<h3>Stage 2 — Absolute State via MQTT (<code>rotary_light_works_mqtt.ino</code>)</h3>
+<p>Once the hardware inputs were reliable, I added WiFi and MQTT using <code>PubSubClient</code>. In this iteration, the ESP32 attempted to manage the state internally—storing an absolute brightness value (0–100) and tracking whether the light was "ON" or "OFF." </p>
+<pre><code class="language-cpp">if (digitalRead(pinDT) != currentCLK) {
+  brightness -= 10;
+} else {
+  brightness += 10;
+}
+if (brightness &gt; 100) brightness = 100;
+if (brightness &lt; 0)   brightness = 0;
+
+client.publish(brightness_state_topic, String(brightness).c_str(), true);
+</code></pre>
+<p>This created synchronization issues. If the lights were adjusted via the Home Assistant app, the ESP32's internal state became outdated, leading to jumping brightness levels on the next physical rotation.</p>
+<h3>Stage 3 — Relative Commands &amp; Sensor Integration (<code>rotary_light_toggle_temp_humidity.ino</code>)</h3>
+<p>To fix the state mismatch, the architecture was shifted. The ESP32 became a "dumb" input device that simply publishes relative action strings over MQTT, making Home Assistant the ultimate source of truth. A DHT11 sensor was also integrated into the loop, publishing environmental data every two seconds.</p>
+<pre><code class="language-cpp">// Publishing relative rotational commands
+if (digitalRead(pinDT) != currentCLK) {
+  client.publish(brightness_state_topic, &quot;decrease&quot;, true);
+} else {
+  client.publish(brightness_state_topic, &quot;increase&quot;, true);
+}
+</code></pre>
+<p>The button logic was expanded to count loops while the switch was held down (20 loops at a 50ms delay = 1 second hold), allowing a single press to send a "toggle" payload and a long press to send a "reset" payload.</p>
+<hr />
+<h2>Home Assistant Integration</h2>
+<p>With the ESP32 publishing simple string commands (<code>increase</code>, <code>decrease</code>, <code>toggle</code>, <code>reset</code>), Home Assistant automations take over the actual control of the smart bulbs (<code>light.dylan_s_lights_2</code>). </p>
+<p><strong>Brightness Adjustment (Step Percentage):</strong></p>
+<pre><code class="language-yaml">alias: Increase Dylan's Lights
+trigger:
+  - trigger: mqtt
+    topic: home/lights/esp32/brightness/state
+    payload: increase
+action:
+  - action: light.turn_on
+    data:
+      brightness_step_pct: 10
+      transition: 0
+    target:
+      entity_id: light.dylan_s_lights_2
+</code></pre>
+<p><em>(A mirrored automation handles the "decrease" payload using <code>brightness_step_pct: -10</code>)</em></p>
+<p><strong>Long-Press Reset (100% White):</strong></p>
+<pre><code class="language-yaml">alias: Reset Dylan's Lights
+trigger:
+  - trigger: mqtt
+    topic: home/lights/esp32/state
+    payload: reset
+action:
+  - action: light.turn_on
+    data:
+      brightness_pct: 100
+      rgb_color: [255, 255, 255]
+    target:
+      entity_id: light.dylan_s_lights_2
+</code></pre>
+<hr />
+<h2>Architecture Diagram</h2>
+<pre><code class="language-text">┌─────────────────────────────────┐
+│     Custom 3D-Printed Mount     │
+│  - Covers physical wall switch  │
+│  - Rotary Encoder (Turn &amp; Push) │
+│  - DHT11 Temp/Humidity Sensor   │
+└────────────┬────────────────────┘
+             │ GPIO Inputs
+             ▼
+┌─────────────────────────────────┐
+│              ESP32              │
+│  - Debounces rotary &amp; button    │
+│  - Reads DHT11 sensor           │
+│  - Translates to string payloads│
+└────────────┬────────────────────┘
+             │ MQTT Publish (WiFi)
+             ▼
+┌─────────────────────────────────┐
+│      Mosquitto MQTT Broker      │
+│  home/lights/esp32/state        │
+│  home/lights/esp32/brightness   │
+└────────────┬────────────────────┘
+             │ MQTT Subscribe
+             ▼
+┌─────────────────────────────────┐
+│         Home Assistant          │
+│  - Automations interpret strings│
+│  - Adjusts smart bulb entities  │
+└─────────────────────────────────┘
+</code></pre>
+<hr />
+<h2>Status &amp; Reflections</h2>
+<ul>
+<li><strong>Functional but Flawed:</strong> The system successfully maps rotation to 10% brightness steps, clicks to toggles, and holds to resets. However, the ESP32 suffers from intermittent WiFi connection drops, requiring periodic reboots. </li>
+<li><strong>Architectural Lesson:</strong> Moving state management off the edge device (the ESP32) and centralizing it in Home Assistant (using relative step commands) was a major turning point in building resilient smart home hardware. </li>
+<li><strong>Current State:</strong> Since integrating Alexa and mmWave presence sensors, the physical switch is rarely used. It remains on the wall mostly as an aesthetic piece and a functional fallback for guests.</li>
+</ul>
+<hr />
+<h2>Tech Stack</h2>
+<table>
+<thead>
+<tr>
+<th>Layer</th>
+<th>Technology</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Microcontroller</td>
+<td>ESP32</td>
+</tr>
+<tr>
+<td>Inputs/Sensors</td>
+<td>Rotary Encoder, DHT11</td>
+</tr>
+<tr>
+<td>Firmware</td>
+<td>Arduino (C++) — WiFi, PubSubClient, DHT</td>
+</tr>
+<tr>
+<td>Messaging</td>
+<td>MQTT (Mosquitto broker)</td>
+</tr>
+<tr>
+<td>Smart home</td>
+<td>Home Assistant Automations</td>
+</tr>
+<tr>
+<td>Fabrication</td>
+<td>3D Printing (CAD enclosure)</td>
+</tr>
+</tbody>
+</table>
+  </div>
+
+</main>
+
+</body>
+</html>

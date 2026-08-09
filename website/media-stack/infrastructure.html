@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Infrastructure — Dylan Zickus</title>
+<meta name="description" content="The Raspberry Pi 5 NAS running OpenMediaVault, remote access via Tailscale, and the full monitoring stack — Beszel, Jellystat, Homarr, Uptime-Kuma." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body>
+
+<nav class="site-nav">
+  <a class="nav-logo" href="../index.html">Dylan Zickus</a>
+  <ul class="nav-links">
+    <li><a href="../index.html">Home</a></li>
+    <li><a href="../smart-home-projects/index.html">Smart Home</a></li>
+    <li><a href="../bathroom-esp/index.html">Bathroom ESP</a></li>
+    <li><a href="../living-room-led/index.html">LED Strip</a></li>
+    <li><a href="../alarm-system-keypad/index.html">Alarm</a></li>
+    <li><a href="../smart-switch-mount/index.html">Switch Mount</a></li>
+    <li><a href="../egg-timer/index.html">Egg Timer</a></li>
+    <li><a href="../ct-clamp-project/index.html">CT Clamp</a></li>
+    <li><a href="index.html" class="active">Media Stack</a></li>
+    <li><a href="../overengineered-clock/index.html">Clock</a></li>
+  </ul>
+</nav>
+
+<div class="breadcrumb">
+  <a href="../index.html">dylanzickus.com</a> <span class="sep">/</span> <a href="index.html">Self-Hosted Media Stack</a> <span class="sep">/</span> <span class="current">Infrastructure</span>
+</div>
+
+<header class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-content">
+    <div class="eyebrow">dylanzickus.com  /  Infrastructure</div>
+    <h1>Infrastructure</h1>
+    <p class="hero-desc">The Raspberry Pi 5 NAS running OpenMediaVault, remote access via Tailscale, and the full monitoring stack — Beszel, Jellystat, Homarr, Uptime-Kuma.</p>
+
+  </div>
+</header>
+
+<main class="main narrow">
+  <div class="md-body">
+<blockquote>
+<p>The hardware and base OS layer that everything else runs on.</p>
+</blockquote>
+<h2>The Hardware</h2>
+<h3>nas-pi — Raspberry Pi 5 (8GB)</h3>
+<p>The primary server for the entire media stack. The Pi 5 was a significant step up from older Pi hardware — enough RAM to run Docker Compose, Jellyfin, and several arr stack containers concurrently, with an actual PCIe bus for real NVMe storage.</p>
+<p><strong>Why a Pi 5 specifically?</strong>
+- 8GB RAM — enough headroom to run a full arr stack, Jellyfin, and monitoring containers simultaneously
+- Passive-coolable with a good case, silent 24/7 operation
+- Low idle power draw — this machine runs constantly
+- PCIe Gen 2 x1 interface for an NVMe HAT (real random I/O, not USB-attached storage)</p>
+<p><strong>Limitations I've run into:</strong>
+- No hardware video encode — the Pi 5's VideoCore can decode but not encode in any useful way for transcoding. This is why the Tdarr transcoding node lives on a different machine entirely.
+- RAM pressure is real when everything is running. The NFS server experiment (documented in the <a href="tdarr.html">Tdarr page</a>) failed entirely because the Pi ran out of memory trying to start <code>nfsd</code> while Jellyfin and the arr stack were up.</p>
+<h3>z240 — HP Z240 Workstation</h3>
+<p>An older HP workstation repurposed as a secondary compute node. Runs the Tdarr transcoding worker using its integrated Intel HD P530 graphics for Quick Sync hardware encoding. Not always on — it spins up for transcoding work and hosts some other Docker services.</p>
+<hr />
+<h2>Operating System: OpenMediaVault</h2>
+<p>The Pi 5 runs <strong>OpenMediaVault (OMV)</strong>, a Debian-based NAS OS. OMV handles:</p>
+<ul>
+<li>Storage management (disk setup, shared folder definitions, SMART monitoring)</li>
+<li>Samba/SMB share configuration — critically, OMV auto-generates <code>smb.conf</code>, which means you cannot edit it directly. Any change has to go through OMV's web UI or it'll be overwritten on the next OMV operation. This caused a debugging headache when the z240 couldn't write to the media share (documented in the Tdarr page).</li>
+<li>Docker integration via the <code>compose</code> plugin — all containerized services are defined in Docker Compose files managed through OMV's UI</li>
+</ul>
+<p>Jellyfin runs <strong>natively</strong> (outside Docker) because of stability issues with the containerized version on ARM. Everything else runs in containers.</p>
+<hr />
+<h2>Networking &amp; Remote Access</h2>
+<p>Remote access is via <strong>Tailscale</strong>, a WireGuard-based mesh VPN. Every machine — nas-pi, z240, and any client I'm using — is on the same Tailscale network regardless of physical location.</p>
+<p>This means:
+- Jellyfin is accessible from the apartment without any port forwarding or dynamic DNS
+- The z240 can mount nas-pi's media share over SMB-on-Tailscale for transcoding
+- SSH into nas-pi from anywhere with no configuration changes</p>
+<p>The connection between nas-pi and z240 is a direct Tailscale peer-to-peer link (not relayed), running at around 115–127 Mbit/s sustained — enough for the transcoding pipeline to work without the network being the bottleneck.</p>
+<hr />
+<h2>Monitoring Stack</h2>
+<h3>Beszel</h3>
+<p>Lightweight system monitoring — CPU, RAM, disk, network. Replaced Netdata, which was removed from the stack because it was too resource-heavy for a Pi 5 running this many services concurrently. Beszel runs as a server + per-machine agent architecture and integrates with the Homarr dashboard.</p>
+<h3>Jellystat</h3>
+<p>Jellyfin-specific statistics and usage tracking. Backed by a Postgres database container. Tracks what's been watched, playback history, and stream quality. Useful for auditing whether the transcoding work is actually paying off in direct-play rates.</p>
+<h3>Uptime-Kuma</h3>
+<p>Service health monitoring with alerting. Watches all the key services (Jellyfin, Radarr, Sonarr, etc.) and alerts if anything goes down. Simple but effective.</p>
+<h3>Homarr</h3>
+<p>The dashboard that ties everything together — a single browser tab showing the status of every service, quick links, and widgets from Beszel/Uptime-Kuma. Much easier than bookmarking individual service UIs.</p>
+<hr />
+<h2>Lessons Learned</h2>
+<p><strong>OMV is opinionated and will fight you if you go around it.</strong> Editing system files it manages directly always backfires. Work through the UI, or accept that your changes will be silently overwritten.</p>
+<p><strong>RAM budgeting matters on a Pi.</strong> Eight gigabytes sounds like plenty until you're running Jellyfin (with active streams), qBittorrent, six arr stack containers, three monitoring containers, and a Docker daemon — and then you try to start an NFS server. Profile memory usage before adding new services.</p>
+<p><strong>Tailscale is genuinely magic for this use case.</strong> Zero-configuration encrypted cross-network connectivity with direct peer-to-peer connections where possible. It's been the most "set it and forget it" piece of the entire stack.</p>
+  </div>
+
+</main>
+
+</body>
+</html>

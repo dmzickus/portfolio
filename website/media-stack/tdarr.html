@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Tdarr Pipeline — Dylan Zickus</title>
+<meta name="description" content="Automated transcoding to normalize 117 files to H.264 for direct play. Cross-network QSV encoding, a custom Docker image to get VA-API working, the NFS failure, and the OMV/Samba debugging rabbit hole." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body>
+
+<nav class="site-nav">
+  <a class="nav-logo" href="../index.html">Dylan Zickus</a>
+  <ul class="nav-links">
+    <li><a href="../index.html">Home</a></li>
+    <li><a href="../smart-home-projects/index.html">Smart Home</a></li>
+    <li><a href="../bathroom-esp/index.html">Bathroom ESP</a></li>
+    <li><a href="../living-room-led/index.html">LED Strip</a></li>
+    <li><a href="../alarm-system-keypad/index.html">Alarm</a></li>
+    <li><a href="../smart-switch-mount/index.html">Switch Mount</a></li>
+    <li><a href="../egg-timer/index.html">Egg Timer</a></li>
+    <li><a href="../ct-clamp-project/index.html">CT Clamp</a></li>
+    <li><a href="index.html" class="active">Media Stack</a></li>
+    <li><a href="../overengineered-clock/index.html">Clock</a></li>
+  </ul>
+</nav>
+
+<div class="breadcrumb">
+  <a href="../index.html">dylanzickus.com</a> <span class="sep">/</span> <a href="index.html">Self-Hosted Media Stack</a> <span class="sep">/</span> <span class="current">Tdarr Pipeline</span>
+</div>
+
+<header class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-content">
+    <div class="eyebrow">dylanzickus.com  /  Tdarr Pipeline</div>
+    <h1>Tdarr Pipeline</h1>
+    <p class="hero-desc">Automated transcoding to normalize 117 files to H.264 for direct play. Cross-network QSV encoding, a custom Docker image to get VA-API working, the NFS failure, and the OMV/Samba debugging rabbit hole.</p>
+
+  </div>
+</header>
+
+<main class="main narrow">
+  <div class="md-body">
+<blockquote>
+<p>Automated library normalization: every file gets converted to H.264 + AC3 so every client can direct-play without the server breaking a sweat.</p>
+</blockquote>
+<h2>The Problem</h2>
+<p>A media library accumulated over time from different sources ends up with a chaotic codec mix. An audit of the full library (352 files, ~740GB) revealed:</p>
+<table>
+<thead>
+<tr>
+<th>Codec</th>
+<th>Files</th>
+<th>Size</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>H.264 (already good)</td>
+<td>233</td>
+<td>506.5 GB</td>
+</tr>
+<tr>
+<td>HEVC (H.265)</td>
+<td>96</td>
+<td>—</td>
+</tr>
+<tr>
+<td>AV1</td>
+<td>21</td>
+<td>—</td>
+</tr>
+<tr>
+<td><strong>Needs conversion</strong></td>
+<td><strong>117</strong></td>
+<td><strong>~233.5 GB</strong></td>
+</tr>
+</tbody>
+</table>
+<p>The HEVC files were mostly <em>House of the Dragon</em> (S01, S03). The AV1 files were S02 of the same show plus <em>Cyberpunk: Edgerunners</em>. Neither codec direct-plays on all clients — older TVs, game consoles, and some browser implementations fall back to software transcoding or refuse to play entirely.</p>
+<p>The goal: get every file to <strong>H.264 video, AC3/AAC audio, SRT subtitles</strong> — a combination that direct-plays on essentially everything.</p>
+<hr />
+<h2>Architecture</h2>
+<p>The Pi 5 (<code>nas-pi</code>) has no usable hardware video encoder. Running software transcoding on it for 117 files would take days and put sustained 100% CPU load on the machine that also runs the arr stack and Jellyfin.</p>
+<p>The solution: <strong>distributed Tdarr</strong> with the encode work offloaded to a separate machine.</p>
+<pre><code>nas-pi                          z240 (HP Workstation)
+─────────────────────           ──────────────────────────────
+Tdarr Server                    Tdarr Node (Docker/Podman)
+  - manages the queue     ←──→    - pulls jobs from server
+  - no local workers              - Intel QSV hardware encode
+  - internalNode=false            - reads/writes via SMB mount
+                                  - 1 GPU worker (network cap)
+</code></pre>
+<p>The z240 has an Intel HD P530 integrated GPU with Quick Sync Video (QSV) — Intel's fixed-function hardware encoder. QSV can encode H.264 at 10–20x real-time speed while barely touching CPU, and the power draw is a fraction of software encoding.</p>
+<p>Files travel between machines over <strong>SMB mounted on Tailscale</strong> — the z240 mounts nas-pi's media share, reads the source file, encodes it locally in a temp directory, and writes the output back. The Tailscale link sustains ~115–127 Mbit/s between the two machines, enough that network I/O isn't the bottleneck.</p>
+<hr />
+<h2>Getting QSV Working: The Docker Image Problem</h2>
+<p>The standard <code>tdarr_node</code> Docker image doesn't include the Intel VA-API drivers needed for QSV. The first attempt to use hardware encoding silently fell back to software — Tdarr's generic "Set Encoder" node is known to do this without any warning.</p>
+<p>Two fixes:</p>
+<p><strong>1. Use an explicit FFmpeg Command node instead of Set Encoder.</strong>
+The FFmpeg Command node in the Tdarr Flow editor lets you specify the exact encoder (<code>h264_qsv</code>) rather than relying on Tdarr's abstraction layer to pick it. No silent fallback.</p>
+<p><strong>2. Build a custom Docker image with the VA-API driver.</strong></p>
+<pre><code class="language-dockerfile">FROM ghcr.io/haveagitgat/tdarr_node:latest
+RUN apt-get update &amp;&amp; apt-get install -y \
+    intel-media-va-driver-non-free \
+    &amp;&amp; rm -rf /var/lib/apt/lists/*
+</code></pre>
+<p>After building and starting this image, <code>vainfo</code> inside the container confirmed:
+- <code>iHD</code> driver loaded (Intel's modern VA-API implementation)
+- <code>H264 VAEntrypointEncSliceLP</code> available — that's the Quick Sync low-power encode entry point</p>
+<p>QSV was working. The encode target:</p>
+<pre><code>h264_qsv
+  global_quality: 20
+  scale cap: 1920px width
+  audio: add AC3 5.1 640k track if missing; convert lossless (DTS-HD MA, TrueHD) to AC3
+  subtitles: OCR PGS → SRT (despite quality tradeoff, SRT direct-plays everywhere)
+</code></pre>
+<hr />
+<h2>The NFS Rabbit Hole</h2>
+<p>Getting files from nas-pi to z240 should have been simple. The first approach: NFS share from nas-pi, mounted on z240.</p>
+<p>It wasn't simple.</p>
+<p><strong>Attempt 1: NFS</strong></p>
+<p><code>nfs-server.service</code> on nas-pi failed to start with a <code>nfsdctl lockd configuration failure / exit code 1</code>. After digging into the journal:</p>
+<pre><code>writing to /proc/fs/nfsd/threads failed: Cannot allocate memory
+</code></pre>
+<p>The Pi 5 was out of RAM. At the time of the NFS attempt, nas-pi was running Jellyfin, the full arr stack, Docker, and OMV — sitting at 486MB free RAM with 1.7GB of its 2GB swap in use. Starting an NFS server on top of that was never going to work.</p>
+<p>Root cause: the NFS kernel server allocates memory at startup based on the number of threads requested. With essentially no free RAM, the kernel rejected the allocation.</p>
+<p><strong>Attempt 2: Samba/SMB</strong></p>
+<p>Switched to SMB (already in use on nas-pi for other purposes). Faster to set up, no kernel memory requirements.</p>
+<p>Hit a second wall: the z240 could mount the share but couldn't write to it. The SMB mount succeeded, files were readable, but every write attempt returned "permission denied."</p>
+<p>Debugging layers:
+1. Checked filesystem permissions on nas-pi — looked fine
+2. Checked Samba share config — found <code>read list = z240</code>, an explicit read-only override
+3. Tried editing <code>smb.conf</code> directly — changes were overwritten within seconds</p>
+<p>Root cause: <strong>OMV manages <code>smb.conf</code> automatically</strong>. Any direct edit is silently overwritten whenever OMV makes a change. The correct fix: go into OMV's web UI → Shared Folder → Privileges/ACL for the media folder → remove <code>z240</code> from the read-only list.</p>
+<p>After that fix and an <code>smbd</code> restart, write access worked. The full debugging path took longer than it should have because the "smb.conf is managed" behavior isn't well-documented in OMV's UI.</p>
+<hr />
+<h2>Audio &amp; Subtitle Strategy</h2>
+<p><strong>Audio:</strong>
+- If a file already has both stereo and 5.1 tracks: leave them both as-is
+- If a file has only 5.1 lossless (DTS-HD MA, TrueHD): convert to AC3 5.1 (lossy but direct-playable)
+- If a file has only stereo: leave it — Tdarr cannot fabricate real surround from a stereo mix
+- Do not upmix stereo to fake 5.1</p>
+<p>The "no upmix" decision is about honesty. Upmixed surround sounds worse than the original stereo mix and wastes space. If real 5.1 audio matters for a specific title, Radarr's quality profiles will find a 5.1 source (see the <a href="arr-stack.html">arr stack page</a>).</p>
+<p><strong>Subtitles:</strong>
+- PGS (image-based) subtitles: OCR-convert to SRT
+- SRT/ASS text subtitles: pass through unchanged
+- The OCR conversion loses some formatting and occasionally mistranscribes text, but SRT subtitles direct-render on every client. PGS requires server-side rendering (transcoding), which defeats the whole point.</p>
+<hr />
+<h2>Lessons Learned</h2>
+<p><strong>Silent fallback is the enemy of hardware encoding pipelines.</strong> Tdarr's Set Encoder node falling back to software without logging it was hours of "why is this so slow" before I found the explicit FFmpeg Command node approach. Always verify hardware encoding is actually happening — check <code>vainfo</code>, check the Tdarr worker logs for the encoder string being used.</p>
+<p><strong>NFS on a memory-constrained machine is a non-starter.</strong> The Pi 5 at 8GB has enough RAM for its normal workload, but that workload leaves little headroom. NFS's kernel-space memory requirements pushed it over the edge. SMB/Samba is userspace and much lighter.</p>
+<p><strong>OMV is the source of truth for Samba config, not <code>smb.conf</code>.</strong> Any time something seems wrong with a share on an OMV machine, check the OMV UI first. Direct config edits are a trap.</p>
+<p><strong>One GPU worker is the right call at this network throughput.</strong> At ~115 Mbit/s sustained, the network link can handle about one 1080p H.264 encode stream worth of I/O at a time. Running two workers would have them competing for the same pipe. Cap it at one and let it run.</p>
+  </div>
+
+</main>
+
+</body>
+</html>

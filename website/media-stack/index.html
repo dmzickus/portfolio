@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Self-Hosted Media Stack — Dylan Zickus</title>
+<meta name="description" content="A full homelab media pipeline on a Raspberry Pi 5 — Jellyfin, automated library management via the arr stack, VPN-tunneled downloads, and cross-network hardware transcoding with Intel Quick Sync." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body>
+
+<nav class="site-nav">
+  <a class="nav-logo" href="../index.html">Dylan Zickus</a>
+  <ul class="nav-links">
+    <li><a href="../index.html">Home</a></li>
+    <li><a href="../smart-home-projects/index.html">Smart Home</a></li>
+    <li><a href="../bathroom-esp/index.html">Bathroom ESP</a></li>
+    <li><a href="../living-room-led/index.html">LED Strip</a></li>
+    <li><a href="../alarm-system-keypad/index.html">Alarm</a></li>
+    <li><a href="../smart-switch-mount/index.html">Switch Mount</a></li>
+    <li><a href="../egg-timer/index.html">Egg Timer</a></li>
+    <li><a href="../ct-clamp-project/index.html">CT Clamp</a></li>
+    <li><a href="index.html" class="active">Media Stack</a></li>
+    <li><a href="../overengineered-clock/index.html">Clock</a></li>
+  </ul>
+</nav>
+
+<div class="breadcrumb">
+  <a href="../index.html">dylanzickus.com</a> <span class="sep">/</span> <span class="current">Self-Hosted Media Stack</span>
+</div>
+
+<header class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-content">
+    <div class="eyebrow">dylanzickus.com  /  Self-Hosted Media Stack</div>
+    <h1>Self-Hosted Media Stack</h1>
+    <p class="hero-desc">A full homelab media pipeline on a Raspberry Pi 5 — Jellyfin, automated library management via the arr stack, VPN-tunneled downloads, and cross-network hardware transcoding with Intel Quick Sync.</p>
+    <div class="hero-pills">
+      <span class="pill">Raspberry Pi 5</span>
+      <span class="pill">Docker</span>
+      <span class="pill">Jellyfin</span>
+      <span class="pill">WireGuard / AirVPN</span>
+      <span class="pill">Intel QSV</span>
+      <span class="pill">Tailscale</span>
+      <span class="pill">OpenMediaVault</span>
+    </div>
+  </div>
+</header>
+
+<main class="main narrow">
+  <div class="md-body">
+<blockquote>
+<p>A fully self-hosted media server, automated library management pipeline, and transcoding infrastructure — built on a Raspberry Pi 5, an old workstation, and a lot of troubleshooting.</p>
+</blockquote>
+<h2>What is this?</h2>
+<p>This is a writeup of a project I've been building and iterating on throughout 2026: a home media stack that replaces streaming services with a fully self-hosted setup. No subscriptions, no content disappearing, no algorithmic recommendations — just a local library I control, available on any device anywhere.</p>
+<p>The stack handles everything from <strong>finding and downloading media</strong>, to <strong>organizing and cataloging it</strong>, to <strong>streaming it to any device</strong> with near-zero transcoding. There's also an automated transcoding pipeline that normalizes the library's codec mix for maximum compatibility.</p>
+<p>It's the kind of project that started simple and kept growing. What began as "just run Jellyfin on a Pi" turned into a multi-machine system with VPN-tunneled downloads, cross-network hardware transcoding, and more <code>docker-compose</code> files than I'd like to admit.</p>
+<hr />
+<h2>Architecture Overview</h2>
+<pre><code>┌─────────────────────────────────────────────────┐
+│                   nas-pi (Pi 5)                  │
+│                                                  │
+│  Jellyfin (native)   ←── media library           │
+│  Radarr / Sonarr / Lidarr / Bazarr              │
+│  Prowlarr (indexer proxy)                        │
+│  qBittorrent ──────────── Gluetun (AirVPN)      │
+│  Tdarr Server (no local workers)                 │
+│  Homarr · Jellystat · Beszel · Uptime-Kuma      │
+└──────────────┬──────────────────────────────────┘
+               │ Tailscale (Samba/SMB)
+               │
+┌──────────────▼──────────────────────────────────┐
+│                  z240 (HP Workstation)            │
+│                                                  │
+│  Tdarr Node (Docker/Podman)                      │
+│  Intel QSV hardware encode (HD P530)             │
+└─────────────────────────────────────────────────┘
+</code></pre>
+<p>All download traffic routes through a WireGuard VPN tunnel (AirVPN via Gluetun). The arr stack containers share the VPN container's network namespace, so nothing leaks if the tunnel drops. Jellyfin streams directly to clients on the local network or via Tailscale from anywhere.</p>
+<p>The transcoding node runs on a separate machine connected over Tailscale, using Intel Quick Sync for hardware-accelerated H.264 encoding. Files travel over SMB-on-Tailscale between machines.</p>
+<hr />
+<h2>The Stack at a Glance</h2>
+<table>
+<thead>
+<tr>
+<th>Component</th>
+<th>Role</th>
+<th>Page</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>nas-pi (Pi 5 + OMV)</td>
+<td>NAS, host for everything</td>
+<td><a href="infrastructure.html">Infrastructure</a></td>
+</tr>
+<tr>
+<td>Jellyfin</td>
+<td>Media server, streaming</td>
+<td><a href="jellyfin.html">Jellyfin</a></td>
+</tr>
+<tr>
+<td>Radarr / Sonarr / Lidarr / Bazarr</td>
+<td>Automated library management</td>
+<td><a href="arr-stack.html">The arr Stack</a></td>
+</tr>
+<tr>
+<td>Prowlarr + qBittorrent + Gluetun</td>
+<td>Indexing, downloading, VPN routing</td>
+<td><a href="vpn-routing.html">VPN &amp; Downloading</a></td>
+</tr>
+<tr>
+<td>Tdarr + z240 QSV node</td>
+<td>Automated transcoding pipeline</td>
+<td><a href="tdarr.html">Tdarr Pipeline</a></td>
+</tr>
+<tr>
+<td>Homarr, Beszel, Jellystat, Uptime-Kuma</td>
+<td>Dashboard &amp; monitoring</td>
+<td><a href="infrastructure.html">Infrastructure</a></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>Timeline</h2>
+<h3>Q1 2026 — Foundation</h3>
+<p>Set up the Raspberry Pi 5 as a NAS running OpenMediaVault. Got Jellyfin running natively (not containerized — more on why). Figured out storage layout, permissions, and remote access via Tailscale. This phase was mostly infrastructure groundwork: getting a stable, remotely accessible machine that could serve media reliably.</p>
+<h3>Q2 2026 — Automation</h3>
+<p>Deployed the full arr stack: Radarr, Sonarr, Lidarr, Bazarr, Prowlarr, and qBittorrent — all containerized and routed through a Gluetun VPN tunnel. Spent significant time on hardlink configuration (critical for keeping a clean library without duplicating storage), quality profiles, and custom format scoring in Radarr/Sonarr. Also dealt with a security incident involving disguised malware in torrent files — documented in the arr stack page.</p>
+<h3>Summer 2026 — Transcoding &amp; Monitoring</h3>
+<p>Built the Tdarr transcoding pipeline to normalize the library to H.264 for direct play everywhere. This turned into a deep rabbit hole: NFS failures on a memory-constrained Pi, a custom Docker image to get Intel QSV working, cross-network SMB mounts over Tailscale, and a lot of <code>vainfo</code> output. Also set up the full monitoring stack (Beszel, Jellystat, Uptime-Kuma) and a Homarr dashboard to tie everything together.</p>
+<hr />
+<h2>Why Self-Host?</h2>
+<p>Honestly, a mix of practical and philosophical reasons:</p>
+<ul>
+<li><strong>Control</strong> — content I've downloaded doesn't disappear when a licensing deal expires</li>
+<li><strong>Compatibility</strong> — Jellyfin runs on everything: browsers, phones, TVs, game consoles</li>
+<li><strong>Cost</strong> — after the initial hardware, it's effectively free</li>
+<li><strong>Learning</strong> — this project has touched Linux administration, Docker networking, VPN configuration, codec pipelines, and cross-machine file sharing. It's been one of the best practical learning experiences I've had</li>
+</ul>
+<p>The tradeoff is real though: you become your own ops team. When something breaks at 11pm, that's on you to fix.</p>
+<hr />
+<h2>Pages in This Section</h2>
+<ul>
+<li><a href="infrastructure.html">Infrastructure</a> — nas-pi, OpenMediaVault, hardware, and monitoring</li>
+<li><a href="jellyfin.html">Jellyfin</a> — media server setup, native install, and stability debugging</li>
+<li><a href="arr-stack.html">The arr Stack</a> — automated library management and quality control</li>
+<li><a href="vpn-routing.html">VPN &amp; Downloading</a> — Gluetun, AirVPN, WireGuard, and download routing</li>
+<li><a href="tdarr.html">Tdarr Pipeline</a> — automated transcoding to H.264 with Intel Quick Sync</li>
+</ul>
+  </div>
+
+  <div class="section-header"><span class="section-label">Pages in this section</span></div>
+  <div class="collection-grid">
+    <a class="collection-card" href="arr-stack.html">
+      <div class="ccard-top">
+        <div class="ccard-icon">⚙️</div>
+        
+      </div>
+      <div class="ccard-title">The arr Stack</div>
+      <div class="ccard-desc">Radarr, Sonarr, Lidarr, Bazarr, and Prowlarr automating the full library lifecycle. Hardlink setup, custom format scoring, and a security incident with malware-disguised torrents.</div>
+      <div class="ccard-tags"><span class="tag">Radarr</span><span class="tag">Sonarr</span><span class="tag">Prowlarr</span><span class="tag">Hardlinks</span></div>
+      <div class="ccard-arrow">View page →</div>
+    </a>
+    <a class="collection-card" href="infrastructure.html">
+      <div class="ccard-top">
+        <div class="ccard-icon">🖥️</div>
+        
+      </div>
+      <div class="ccard-title">Infrastructure</div>
+      <div class="ccard-desc">The Raspberry Pi 5 NAS running OpenMediaVault, remote access via Tailscale, and the full monitoring stack — Beszel, Jellystat, Homarr, Uptime-Kuma.</div>
+      <div class="ccard-tags"><span class="tag">Pi 5</span><span class="tag">OpenMediaVault</span><span class="tag">Tailscale</span><span class="tag">Beszel</span></div>
+      <div class="ccard-arrow">View page →</div>
+    </a>
+    <a class="collection-card" href="jellyfin.html">
+      <div class="ccard-top">
+        <div class="ccard-icon green">📺</div>
+        
+      </div>
+      <div class="ccard-title">Jellyfin</div>
+      <div class="ccard-desc">Open-source media server handling library cataloging, metadata, and streaming. Why it runs natively instead of containerized, and the crash-debugging saga.</div>
+      <div class="ccard-tags"><span class="tag">Jellyfin</span><span class="tag">Direct play</span><span class="tag">Streaming</span></div>
+      <div class="ccard-arrow">View page →</div>
+    </a>
+    <a class="collection-card" href="tdarr.html">
+      <div class="ccard-top">
+        <div class="ccard-icon">🎬</div>
+        
+      </div>
+      <div class="ccard-title">Tdarr Pipeline</div>
+      <div class="ccard-desc">Automated transcoding to normalize 117 files to H.264 for direct play. Cross-network QSV encoding, a custom Docker image to get VA-API working, the NFS failure, and the OMV/Samba debugging rabbit hole.</div>
+      <div class="ccard-tags"><span class="tag">Tdarr</span><span class="tag">Intel QSV</span><span class="tag">H.264</span><span class="tag">FFmpeg</span></div>
+      <div class="ccard-arrow">View page →</div>
+    </a>
+    <a class="collection-card" href="vpn-routing.html">
+      <div class="ccard-top">
+        <div class="ccard-icon yellow">🔐</div>
+        
+      </div>
+      <div class="ccard-title">VPN &amp; Downloading</div>
+      <div class="ccard-desc">How Gluetun creates a container-level WireGuard tunnel that the entire download stack shares. AirVPN, port forwarding, kill switch behavior, and Docker network namespaces.</div>
+      <div class="ccard-tags"><span class="tag">Gluetun</span><span class="tag">WireGuard</span><span class="tag">AirVPN</span><span class="tag">Docker</span></div>
+      <div class="ccard-arrow">View page →</div>
+    </a>
+  </div>
+</main>
+
+</body>
+</html>

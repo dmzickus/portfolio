@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Dylan Zickus — Projects</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="assets/style.css" />
+</head>
+<body>
+
+<nav class="site-nav">
+  <a class="nav-logo" href="index.html">Dylan Zickus</a>
+  <ul class="nav-links">
+    <li><a href="index.html" class="active">Home</a></li>
+    <li><a href="smart-home-projects/index.html">Smart Home</a></li>
+    <li><a href="bathroom-esp/index.html">Bathroom ESP</a></li>
+    <li><a href="living-room-led/index.html">LED Strip</a></li>
+    <li><a href="alarm-system-keypad/index.html">Alarm</a></li>
+    <li><a href="smart-switch-mount/index.html">Switch Mount</a></li>
+    <li><a href="egg-timer/index.html">Egg Timer</a></li>
+    <li><a href="ct-clamp-project/index.html">CT Clamp</a></li>
+    <li><a href="media-stack/index.html">Media Stack</a></li>
+    <li><a href="overengineered-clock/index.html">Clock</a></li>
+  </ul>
+</nav>
+
+<header class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-content">
+    <div class="eyebrow">dylanzickus.com  /  Projects</div>
+    <h1>Hardware, Home Automation<br>&amp; Homelab</h1>
+    <p class="hero-desc">A collection of embedded builds, ESP microcontroller projects, smart home automation, and self-hosted infrastructure — spanning a dorm room, an apartment, and a lot of trial and error with MQTT, Zigbee, Docker, and Home Assistant.</p>
+    <div class="hero-pills">
+      <span class="pill">ESP8266 / ESP32</span>
+      <span class="pill">Arduino</span>
+      <span class="pill">MQTT</span>
+      <span class="pill">Home Assistant</span>
+      <span class="pill">Zigbee</span>
+      <span class="pill">3D Printing</span>
+      <span class="pill">Docker</span>
+      <span class="pill">Linux</span>
+      <span class="pill">Self-hosting</span>
+    </div>
+  </div>
+</header>
+
+<main class="main">
+
+  <div class="section-header"><span class="section-label">Project pages</span></div>
+  <div class="collection-grid">
+    <a class="collection-card" href="smart-home-projects/index.html">
+      <div class="ccard-top">
+        <div class="ccard-icon green">🏠</div>
+        <span class="ccard-count">15+ projects</span>
+      </div>
+      <div class="ccard-title">Smart Home Overview</div>
+      <div class="ccard-desc">The full ecosystem — Zigbee bulbs, MQTT broker, mmWave presence sensors, Alexa, and every ESP device in the apartment. Start here for the complete picture.</div>
+      <div class="ccard-tags"><span class="tag">Home Assistant</span><span class="tag">Zigbee</span><span class="tag">MQTT</span><span class="tag">Presence sensors</span></div>
+      <div class="ccard-arrow">View page →</div>
+    </a>
+    <a class="collection-card" href="bathroom-esp/index.html">
+      <div class="ccard-top">
+        <div class="ccard-icon">🚿</div>
+        <span class="ccard-count">5-stage iteration</span>
+      </div>
+      <div class="ccard-title">Bathroom Automation Controller</div>
+      <div class="ccard-desc">ESP8266 handling a 3-state occupancy machine from a reed switch and DHT11 — door-triggered lighting plus shower detection driving a servo fan via Home Assistant.</div>
+      <div class="ccard-tags"><span class="tag">ESP8266</span><span class="tag">Reed switch</span><span class="tag">DHT11</span><span class="tag">State machine</span></div>
+      <div class="ccard-arrow">View page →</div>
+    </a>
+    <a class="collection-card" href="living-room-led/index.html">
+      <div class="ccard-top">
+        <div class="ccard-icon green">💡</div>
+        <span class="ccard-count">3-stage iteration</span>
+      </div>
+      <div class="ccard-title">Living Room LED Strip</div>
+      <div class="ccard-desc">Desoldered the IR receiver off a salvaged LED strip and wired it to an ESP for full RGB MQTT control. Per-channel color correction to fix hardware imbalance.</div>
+      <div class="ccard-tags"><span class="tag">ESP8266</span><span class="tag">PWM</span><span class="tag">MQTT</span><span class="tag">Color correction</span></div>
+      <div class="ccard-arrow">View page →</div>
+    </a>
+    <a class="collection-card" href="alarm-system-keypad/index.html">
+      <div class="ccard-top">
+        <div class="ccard-icon yellow">🔐</div>
+        <span class="ccard-count">3-stage iteration</span>
+      </div>
+      <div class="ccard-title">Alarm System Keypad</div>
+      <div class="ccard-desc">Redesigned a 7-pin matrix keypad into a single analog input using a resistor ladder — unique voltage per button. Arm/disarm via PIN and Home Assistant; TV alarm response sequence.</div>
+      <div class="ccard-tags"><span class="tag">ESP8266</span><span class="tag">Resistor ladder</span><span class="tag">ADC</span><span class="tag">HA automations</span></div>
+      <div class="ccard-arrow">View page →</div>
+    </a>
+    <a class="collection-card" href="smart-switch-mount/index.html">
+      <div class="ccard-top">
+        <div class="ccard-icon">🔄</div>
+        <span class="ccard-count">3-stage iteration</span>
+      </div>
+      <div class="ccard-title">3D-Printed Switch Mount</div>
+      <div class="ccard-desc">Custom enclosure over the wall switch housing an ESP32 and rotary encoder. Sends relative commands to HA instead of tracking absolute state — key architectural lesson.</div>
+      <div class="ccard-tags"><span class="tag">ESP32</span><span class="tag">Rotary encoder</span><span class="tag">3D print</span><span class="tag">MQTT</span></div>
+      <div class="ccard-arrow">View page →</div>
+    </a>
+    <a class="collection-card" href="egg-timer/index.html">
+      <div class="ccard-top">
+        <div class="ccard-icon">⏱️</div>
+        <span class="ccard-count">2-phase build</span>
+      </div>
+      <div class="ccard-title">OLED Egg Timer + HA Companion</div>
+      <div class="ccard-desc">Standalone timer with animated egg character on SSD1306 OLED. Full HA dashboard with per-roommate notification routing. Hardware and firmware done; never merged or shipped.</div>
+      <div class="ccard-tags"><span class="tag">ESP8266</span><span class="tag">SSD1306</span><span class="tag">Animations</span><span class="tag">HA dashboard</span></div>
+      <div class="ccard-arrow">View page →</div>
+    </a>
+    <a class="collection-card" href="ct-clamp-project/index.html">
+      <div class="ccard-top">
+        <div class="ccard-icon yellow">⚡</div>
+        <span class="ccard-count">In progress</span>
+      </div>
+      <div class="ccard-title">CT Clamp Appliance Monitor</div>
+      <div class="ccard-desc">Non-invasive current sensing for washer/dryer/dishwasher done notifications. Validated circuit on oscilloscope; blocked by ESP ADC noise — pivoting to Arduino ADC.</div>
+      <div class="ccard-tags"><span class="tag">CT clamp</span><span class="tag">ADC</span><span class="tag">Arduino</span><span class="tag">Oscilloscope</span></div>
+      <div class="ccard-arrow">View page →</div>
+    </a>
+    <a class="collection-card" href="media-stack/index.html">
+      <div class="ccard-top">
+        <div class="ccard-icon">🖥️</div>
+        
+      </div>
+      <div class="ccard-title">Self-Hosted Media Stack</div>
+      <div class="ccard-desc">A full homelab media pipeline on a Raspberry Pi 5 — Jellyfin, automated library management via the arr stack, VPN-tunneled downloads, and cross-network hardware transcoding with Intel Quick Sync.</div>
+      <div class="ccard-tags"><span class="tag">Jellyfin</span><span class="tag">Docker</span><span class="tag">WireGuard</span><span class="tag">Raspberry Pi</span><span class="tag">Tdarr</span></div>
+      <div class="ccard-arrow">View page →</div>
+    </a>
+    <a class="collection-card" href="overengineered-clock/index.html">
+      <div class="ccard-top">
+        <div class="ccard-icon green">🕐</div>
+        <span class="ccard-count">4-stage build</span>
+      </div>
+      <div class="ccard-title">Overengineered RTC Clock</div>
+      <div class="ccard-desc">Arduino Mega + DS3231 RTC in a custom 3D-printed purple enclosure. Brute-force calendar math including DST. Featured a scrapped side-scrolling game (&quot;Spike and Dude&quot;).</div>
+      <div class="ccard-tags"><span class="tag">Arduino Mega</span><span class="tag">DS3231</span><span class="tag">20×4 LCD</span><span class="tag">3D print</span></div>
+      <div class="ccard-arrow">View page →</div>
+    </a>
+  </div>
+
+  <div class="section-header"><span class="section-label">Other builds</span></div>
+  <div class="project-grid">
+    <div class="project-card">
+      <div class="pcard-top">
+        <span class="pcard-title">Lizard Watering System</span>
+        <span class="status-badge live">Live</span>
+      </div>
+      <div class="pcard-desc">&quot;Water Spotty&quot; — Alexa-triggered ESP relay controls a pump over a lizard&#x27;s bowl. 30-second timed run, then auto-shutoff.</div>
+    </div>
+    <div class="project-card">
+      <div class="pcard-top">
+        <span class="pcard-title">Automated Blinds</span>
+        <span class="status-badge wip">In progress</span>
+      </div>
+      <div class="pcard-desc">Motor + rope mechanism for window blinds. Motor selected, firmware written, rope rigged. Needs mounting bracket and enclosure before install.</div>
+    </div>
+    <div class="project-card">
+      <div class="pcard-top">
+        <span class="pcard-title">Fridge Milk Weight Sensor</span>
+        <span class="status-badge wip">Proof of concept</span>
+      </div>
+      <div class="pcard-desc">Load cells in a 3D-printed base to track milk by weight. Confirmed fridge = Faraday cage. Stalled on load cell calibration.</div>
+    </div>
+    <div class="project-card">
+      <div class="pcard-top">
+        <span class="pcard-title">mmWave Presence Sensors</span>
+        <span class="status-badge live">Live</span>
+      </div>
+      <div class="pcard-desc">Apartment-wide occupancy via heartbeat/breathing detection. Drives automatic lighting and sleep vs. active room state in HA.</div>
+    </div>
+    <div class="project-card">
+      <div class="pcard-top">
+        <span class="pcard-title">Roku Custom Remote</span>
+        <span class="status-badge live">Live</span>
+      </div>
+      <div class="pcard-desc">HA virtual remotes for smart TVs — no app load, no device scan, connects directly to a specific TV and responds immediately.</div>
+    </div>
+    <div class="project-card">
+      <div class="pcard-top">
+        <span class="pcard-title">Desk Occupancy Lighting</span>
+        <span class="status-badge retired">Dorm</span>
+      </div>
+      <div class="pcard-desc">Pressure sensor under desk chair toggled an LED strip above the desk. Turn-off delay prevented flicker on brief stands.</div>
+    </div>
+    <div class="project-card">
+      <div class="pcard-top">
+        <span class="pcard-title">Bedtime Detection Routine</span>
+        <span class="status-badge retired">Dorm</span>
+      </div>
+      <div class="pcard-desc">Smart switch detected phone-charging after sunset as a sleep proxy → goodnight notification + all lights off. Zero interaction.</div>
+    </div>
+    <div class="project-card">
+      <div class="pcard-top">
+        <span class="pcard-title">Tablet HA Dashboard</span>
+        <span class="status-badge retired">Retired</span>
+      </div>
+      <div class="pcard-desc">Old tablet too slow for the HA web UI — sourced a third-party automation app, got it running. Superseded by Alexa.</div>
+    </div>
+  </div>
+
+  <div class="section-header"><span class="section-label">Core stack</span></div>
+  <div class="stack-grid">
+    <div class="stack-item">
+      <div class="stack-key">Hub</div>
+      <div class="stack-val">Home Assistant</div>
+    </div>
+    <div class="stack-item">
+      <div class="stack-key">MCU</div>
+      <div class="stack-val">ESP8266 / ESP32</div>
+    </div>
+    <div class="stack-item">
+      <div class="stack-key">Protocol</div>
+      <div class="stack-val">Zigbee + MQTT</div>
+    </div>
+    <div class="stack-item">
+      <div class="stack-key">Broker</div>
+      <div class="stack-val">Mosquitto</div>
+    </div>
+    <div class="stack-item">
+      <div class="stack-key">Voice</div>
+      <div class="stack-val">Alexa + Google Home</div>
+    </div>
+    <div class="stack-item">
+      <div class="stack-key">Firmware</div>
+      <div class="stack-val">Arduino (C++)</div>
+    </div>
+    <div class="stack-item">
+      <div class="stack-key">Fabrication</div>
+      <div class="stack-val">FDM 3D printing</div>
+    </div>
+    <div class="stack-item">
+      <div class="stack-key">Domain</div>
+      <div class="stack-val">dylanzickus.com</div>
+    </div>
+  </div>
+
+</main>
+
+</body>
+</html>

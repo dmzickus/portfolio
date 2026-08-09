@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Overengineered RTC Clock — Dylan Zickus</title>
+<meta name="description" content="Arduino Mega + DS3231 RTC in a custom 3D-printed purple enclosure. Brute-force calendar math including DST. Featured a scrapped side-scrolling game (&quot;Spike and Dude&quot;)." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body>
+
+<nav class="site-nav">
+  <a class="nav-logo" href="../index.html">Dylan Zickus</a>
+  <ul class="nav-links">
+    <li><a href="../index.html">Home</a></li>
+    <li><a href="../smart-home-projects/index.html">Smart Home</a></li>
+    <li><a href="../bathroom-esp/index.html">Bathroom ESP</a></li>
+    <li><a href="../living-room-led/index.html">LED Strip</a></li>
+    <li><a href="../alarm-system-keypad/index.html">Alarm</a></li>
+    <li><a href="../smart-switch-mount/index.html">Switch Mount</a></li>
+    <li><a href="../egg-timer/index.html">Egg Timer</a></li>
+    <li><a href="../ct-clamp-project/index.html">CT Clamp</a></li>
+    <li><a href="../media-stack/index.html">Media Stack</a></li>
+    <li><a href="index.html" class="active">Clock</a></li>
+  </ul>
+</nav>
+
+<div class="breadcrumb">
+  <a href="../index.html">dylanzickus.com</a> <span class="sep">/</span> <span class="current">Overengineered RTC Clock</span>
+</div>
+
+<header class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-content">
+    <div class="eyebrow">dylanzickus.com  /  Overengineered RTC Clock</div>
+    <h1>Overengineered RTC Clock</h1>
+    <p class="hero-desc">Arduino Mega + DS3231 RTC in a custom 3D-printed purple enclosure. Brute-force calendar math including DST. Featured a scrapped side-scrolling game (&quot;Spike and Dude&quot;).</p>
+
+  </div>
+</header>
+
+<main class="main narrow">
+  <div class="md-body">
+<h2>Overview</h2>
+<p>A standalone, feature-rich digital clock built from the ground up using an Arduino Mega and a DS3231 Real-Time Clock (RTC) module. The system was designed to display current time, calculate the exact time elapsed since a specific past date, and count down to future recurring anniversaries. </p>
+<p>What makes it worth documenting is the evolution. The project started as a software exercise in brute-forcing complex calendar math without external libraries, morphed into a battle against strict hardware memory limits, and ended as a hands-on lesson in 3D fabrication and physical assembly.</p>
+<hr />
+<h2>Hardware</h2>
+<ul>
+<li><strong>Microcontroller:</strong> Arduino Mega</li>
+<li><strong>Timekeeping:</strong> DS3231 RTC module (I2C) — chosen for its extreme accuracy (~1-2 minutes drift per year) and battery backup.</li>
+<li><strong>Display:</strong> 20x4 Character LCD (I2C)</li>
+<li><strong>Inputs:</strong> Physical push buttons for mode toggling and a photoresistor (LDR) for adaptive brightness.</li>
+<li><strong>Enclosure:</strong> A custom 3D-printed purple trapezoidal cylinder, designed in two interlocking pieces (top and base).</li>
+<li><strong>Wiring:</strong> No PCBs or perfboards. All components were point-to-point soldered and heavily superglued into a permanent, chaotic web to prevent shorting inside the tight case.</li>
+</ul>
+<hr />
+<h2>Iteration History</h2>
+<h3>Stage 1 — Brute-Force Calendar Math (<code>rtcTest.ino</code> / <code>rtcTimeSince.ino</code>)</h3>
+<p>The initial firmware was developed before taking any formal C programming classes. Instead of relying on standard Unix epoch libraries, all time-delta calculations were written from scratch. The system had to manually account for varying month lengths, leap years, and Daylight Saving Time (DST) every single second.</p>
+<pre><code class="language-cpp">bool isStartDST (DateTime dt) {
+  return !dst &amp;&amp;                                 // dst didn't start yet
+          dt.dayOfTheWeek() == 0 &amp;&amp;              // it is a sunday
+          dt.day() &gt;= 8 &amp;&amp; dt.day() &lt;= 14 &amp;&amp;     // second sunday of the month
+          dt.month() == 3 &amp;&amp;                     // it is march
+          dt.hour() == 2 &amp;&amp;                      // 2 am
+          dt.minute() == 0 &amp;&amp; dt.second() == 0;  // on the dot
+}
+</code></pre>
+<p>This brute-force approach was highly educational but computationally repetitive. To ensure the time didn't drift despite the heavy math, the DS3231 RTC was integrated to anchor the logic.</p>
+<hr />
+<h3>Stage 2 — Feature Creep &amp; The Memory Wall (<code>rtcDiffScreens.ino</code>)</h3>
+<p>With the math working, the project expanded to include randomized, highly personalized greetings combining arrays of prefixes and nicknames.</p>
+<p>Two realities of embedded hardware surfaced immediately:</p>
+<p><strong>SRAM Fragmentation.</strong> On an 8-bit AVR microcontroller, large arrays of string literals rapidly devour dynamic memory. The system quickly hit 60% memory capacity, risking heap fragmentation and silent crashes.</p>
+<p><strong>Custom Array Sizing.</strong> To squeeze the messaging system in without crashing, standard library functions were abandoned. The fix was writing custom indexing loops to manually calculate array lengths on the fly:</p>
+<pre><code class="language-cpp">int calc_prefixes_len (char last[5]) {
+  int i = 0;
+  for (; prefixes[i] != last; i++) {}
+  return i + 1;
+}
+</code></pre>
+<hr />
+<h3>Stage 3 — The Ambition of "Spike and Dude" (<code>spike_and_dude.ino</code>)</h3>
+<p>Wanting to push the 20x4 LCD to its limits, a Chrome-dinosaur-style side-scrolling obstacle game was developed as an alternative clock mode. It featured real-time jump physics, custom byte-array character sprites, tick-rate acceleration, and EEPROM-backed high scores.</p>
+<pre><code class="language-cpp">// Custom byte-array character sprites
+uint8_t spike_bits[] = {0x00, 0x00, 0x04, 0x04, 0x04, 0x0e, 0x0e, 0x1f};
+uint8_t dude_bits[]  = {0x0e, 0x0e, 0x04, 0x0e, 0x15, 0x04, 0x0a, 0x11};
+</code></pre>
+<p><strong>The Reality Check:</strong> While the game was successfully built and tested as a standalone script, the memory footprint of the brute-force calendar math and the personalized string arrays left absolutely no room for the game loop. "Spike and Dude" had to be cut from the final firmware to ensure the clock remained stable.</p>
+<hr />
+<h3>Stage 4 — Physical Fabrication (The Purple Enclosure)</h3>
+<p>The final stage was moving from a breadboard to a permanent physical artifact. This was a first attempt at 3D CAD design. Translating digital dimensions to a physical purple trapezoidal enclosure required accounting for tolerances, mounting points, and wire routing.</p>
+<p>It took multiple expensive, time-consuming print iterations just to align the bottom screw holes correctly — a harsh initiation into designing for assembly. Internally, the lack of a custom PCB meant relying on a soldered, superglued rat's nest of wires, permanently sealing the project in its final state.</p>
+<hr />
+<h2>Architecture Diagram</h2>
+<pre><code class="language-text">┌─────────────────────────────────┐
+│          Arduino Mega           │
+│  - Brute-force calendar logic   │
+│  - Custom array memory management│
+└────────────┬────────────┬───────┘
+             │ I2C        │ GPIO / Analog
+             ▼            ▼
+┌──────────────────┐  ┌──────────────────┐
+│  DS3231 RTC Mod  │  │  Physical UI     │
+│  (Timekeeping)   │  │  - Push Buttons  │
+└──────────────────┘  │  - Photoresistor │
+                      └──────────────────┘
+             │ I2C
+             ▼
+┌─────────────────────────────────┐
+│      20x4 Character LCD         │
+│      (Adaptive Backlight)       │
+└─────────────────────────────────┘
+</code></pre>
+<hr />
+<h2>Status &amp; Next Steps</h2>
+<ul>
+<li><strong>Working:</strong> Accurate timekeeping across power loss thanks to the battery-backed RTC.</li>
+<li><strong>Working:</strong> Complex, brute-forced calendar math calculates elapsed and future time perfectly.</li>
+<li><strong>Trade-off:</strong> "Spike and Dude" game was cut. The Mega's SRAM simply couldn't hold the calendar math, the massive string arrays, and the game loop simultaneously.</li>
+<li><strong>Lesson learned:</strong> 3D printing tolerances are unforgiving. Misaligned screw holes cost time and filament, fundamentally changing how I approach CAD for physical electronics.</li>
+<li><strong>Physical finishing:</strong> The exterior looks fantastic (purple trapezoid), but the interior is a permanent, superglued rat's nest. A custom PCB would be the next logical step for a V2.</li>
+</ul>
+<hr />
+<h2>Tech Stack</h2>
+<table>
+<thead>
+<tr>
+<th>Layer</th>
+<th>Technology</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Microcontroller</td>
+<td>Arduino Mega</td>
+</tr>
+<tr>
+<td>Firmware</td>
+<td>C++ (Arduino Framework) — <code>Wire.h</code>, <code>LiquidCrystal_I2C.h</code>, <code>RTClib.h</code></td>
+</tr>
+<tr>
+<td>Hardware</td>
+<td>DS3231 RTC, 20x4 I2C LCD, Push Buttons, LDR</td>
+</tr>
+<tr>
+<td>Fabrication</td>
+<td>Custom CAD, 3D Printed (Purple PLA/PETG)</td>
+</tr>
+</tbody>
+</table>
+  </div>
+
+</main>
+
+</body>
+</html>
