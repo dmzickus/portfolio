@@ -17,6 +17,12 @@ This repo is Dylan's personal site. Read README.md for the content model.
 - Download sources: indexer or tracker names, cracks/repacks, VPN exit locations. Describe the media and game pipelines as library automation and untrusted-file handling.
 - Roommates' or family members' names or private details
 
+## Editing with Dylan
+
+- Preview every visible change before pushing: `python tools/preview.py --compare <changed paths>` and send him the PNGs from `preview/`. Push only after he says to ship it (adding or updating a project page he already approved is fine to push directly).
+- Photos he sends: strip EXIF/GPS, resize to about 1600px wide, save as `content/<slug>/images/cover.jpg` (or `.webp`). Never commit originals with location data.
+- Keep design changes in `build/static/style.css` and the render functions in `build/build.py`; content stays in `content/`.
+
 ## Before pushing
 
 ```

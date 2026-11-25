@@ -28,6 +28,16 @@ python build/build.py                 # add --no-pdf to skip resume PDFs
 python -m http.server 8000 --directory website
 ```
 
+### Screenshot previews (no deploy needed)
+
+```
+pip install playwright pillow        # plus: python -m playwright install chromium, if no Chrome
+python tools/preview.py / /ops-agent/            # desktop + mobile shots of the local build
+python tools/preview.py --compare /projects/     # live site vs local build, side by side
+```
+
+PNGs land in `preview/` (git-ignored).
+
 CI runs `python build/build.py --strict`, which fails on content warnings (bad status, missing summary, broken featured slug, a resume PDF longer than one page).
 
 ## Add a project
