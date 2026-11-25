@@ -12,27 +12,26 @@
 <meta property="og:url" content="{{CANONICAL}}">
 <meta property="og:image" content="https://dylanzickus.com/assets/brand/og-card.png">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="theme-color" content="#1b2440">
+<meta name="theme-color" content="#0f1117">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="/assets/brand/apple-touch-icon.png">
-<link rel="preload" href="/assets/fonts/schibsted.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/assets/fonts/spacegrotesk.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="/assets/style.css">
 <script defer src="/assets/site.js"></script>
 </head>
 <body class="{{BODY_CLASS}}">
 <a class="skip" href="#main">Skip to content</a>
-<header class="site-header">
-  <a class="brand" href="/" aria-label="Spotty Connection, home">
-    <img src="/assets/brand/logo-secondary.svg" alt="" width="220" height="37">
-  </a>
-  <nav class="site-nav" aria-label="Main">{{NAV}}</nav>
-</header>
+<nav class="site-nav" aria-label="Main">
+  <a class="nav-logo" href="/" aria-label="Spotty Connection, home"><img src="/assets/brand/logo-secondary.svg" alt="" width="190" height="32"></a>
+  <div class="nav-links">{{NAV}}</div>
+</nav>
 <main id="main">
 {{BODY}}
 </main>
 <footer class="site-footer">
-  <p>Dylan Zickus, Worcester MA. {{FOOTER_LINKS}}</p>
-  <p class="quiet">Built from Markdown with a small Python script. Last built {{BUILD_DATE}}.</p>
+  <div class="footer-social">{{SOCIAL}}</div>
+  <p>© {{YEAR}} Dylan Zickus · Spotty Connection</p>
+  <a class="trap" href="/signal-lost/" rel="nofollow" tabindex="-1" aria-hidden="true">signal diagnostics</a>
 </footer>
 </body>
 </html>

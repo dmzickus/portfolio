@@ -4,6 +4,11 @@
 title: Full Project Title                 # page heading
 short_title: Short title                  # optional; used on the timeline and "Start here"
 summary: One or two plain sentences. Shown under the title, in the project list and in search results.
+icon: 🔧            # emoji on the placeholder image until there's a photo
+highlights:         # three short lines shown as cards on the project page
+  - First thing worth knowing
+  - Second
+  - Third
 status: live        # live | building | dormant | retired | planned
 area: homelab       # homelab | embedded | software | other  (homelab and embedded are the focus)
 rank: 50            # optional; lower = higher in its area on /projects/
@@ -36,6 +41,7 @@ The debugging story is usually the most interesting part. Keep it concrete.
 
 <!--
 Images: put them in content/<slug>/images/ and use ![alt text](images/photo.jpg).
+images/cover.jpg (or .png/.webp) replaces the placeholder everywhere: carousel, timeline, page header.
 Keep public pages free of internal IPs, hostnames, tunnel/team names, secrets,
 and specifics about download sources.
 -->

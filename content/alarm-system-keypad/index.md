@@ -5,6 +5,11 @@ status: retired
 area: embedded
 summary: A 7-pin matrix keypad rewired into one analog input with a resistor ladder, so every key reads as its own
   voltage. PIN arm/disarm through Home Assistant.
+icon: 🔐
+highlights:
+- 7 keys on one ADC pin via resistor ladder
+- PIN arm/disarm through Home Assistant
+- TV alarm-response sequence
 tags:
 - ESP8266
 - Resistor ladder

@@ -1,18 +1,33 @@
 ---
 title: Ambilight for Jellyfin
 short_title: Ambilight
-summary: An idea to sync the living room lights to whatever's playing on Jellyfin. Average the frame colour with ffmpeg and push it to Hyperion and the Zigbee bulbs.
+summary: An idea to sync the living room lights to whatever's playing on Jellyfin. Average the frame colour with
+  ffmpeg and push it to Hyperion and the Zigbee bulbs.
+icon: 🌈
+highlights:
+- Lights follow what's on Jellyfin
+- ffmpeg color sampling, no capture card
+- Hyperion strip + Zigbee bulbs
 status: planned
 area: embedded
 rank: 60
 started: 2026-07
-tags: [Python, ffmpeg, Home Assistant, Jellyfin]
-stack: [Python, Jellyfin API, ffmpeg, Hyperion (JSON-RPC), Home Assistant, Zigbee]
+tags:
+- Python
+- ffmpeg
+- Home Assistant
+- Jellyfin
+stack:
+- Python
+- Jellyfin API
+- ffmpeg
+- Hyperion (JSON-RPC)
+- Home Assistant
+- Zigbee
 timeline:
-  - date: 2026-07
-    text: Designed, not built.
+- date: 2026-07
+  text: Designed, not built.
 ---
-
 The plan:
 
 1. A small Python service polls Jellyfin's sessions API for what's playing on the living room TV and the current position.

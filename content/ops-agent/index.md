@@ -1,30 +1,55 @@
 ---
 title: Claude Ops Agent for the Homelab
 short_title: Homelab ops agent
-summary: A custom MCP server that lets Claude check on the homelab every morning, fix routine problems itself within set limits, and email me a report of anything that needs a decision.
+summary: A custom MCP server that lets Claude check on the homelab every morning, fix routine problems itself within
+  set limits, and email me a report of anything that needs a decision.
+icon: 🤖
+highlights:
+- Custom Python MCP server, no root shell for the AI
+- Typed actions run by a separate root runner
+- Fixes routine issues, emails a 7 AM report
 status: live
 area: homelab
 rank: 2
 started: 2026-11
 role: Solo; designed the server, the permission model and the policy it enforces
-stack: [Python, MCP, Docker socket proxy, systemd, Cloudflare Tunnel, Cloudflare Access, Gmail]
-focus: [infra, fullstack]
-tags: [Python, MCP, AI agents, Docker, Linux, systemd, Cloudflare, Security, Self-hosting]
+stack:
+- Python
+- MCP
+- Docker socket proxy
+- systemd
+- Cloudflare Tunnel
+- Cloudflare Access
+- Gmail
+focus:
+- infra
+- fullstack
+tags:
+- Python
+- MCP
+- AI agents
+- Docker
+- Linux
+- systemd
+- Cloudflare
+- Security
+- Self-hosting
 timeline:
-  - date: 2026-11-17
-    text: First version goes live, report-only, behind Cloudflare Access with OAuth.
-  - date: 2026-11-17
-    text: Added a root runner that executes only fixed, typed actions, so Claude never gets a shell. Daily 7 AM report scheduled.
-  - date: 2026-11-18
-    text: Widened the autonomy tier. Small config fixes and broken cron jobs get repaired first, and the report lists only what's left.
-  - date: 2026-11-18
-    text: API access to every app in the media stack, with keys pulled from one secrets file.
-  - date: 2026-11-20
-    text: OMV share management (changes need my approval). The couch game box joins the daily scan.
-  - date: 2026-11-25
-    text: The game pipeline's held and quarantined items are now part of the daily check.
+- date: 2026-11-17
+  text: First version goes live, report-only, behind Cloudflare Access with OAuth.
+- date: 2026-11-17
+  text: Added a root runner that executes only fixed, typed actions, so Claude never gets a shell. Daily 7 AM report
+    scheduled.
+- date: 2026-11-18
+  text: Widened the autonomy tier. Small config fixes and broken cron jobs get repaired first, and the report lists
+    only what's left.
+- date: 2026-11-18
+  text: API access to every app in the media stack, with keys pulled from one secrets file.
+- date: 2026-11-20
+  text: OMV share management (changes need my approval). The couch game box joins the daily scan.
+- date: 2026-11-25
+  text: The game pipeline's held and quarantined items are now part of the daily check.
 ---
-
 I wanted the homelab to tell me when something was wrong instead of me finding out when a roommate says the TV app is broken. I also didn't want to hand an AI a root shell. This project is the middle ground: Claude gets a purpose-built set of tools, and the server decides what those tools are allowed to do.
 
 ## How it works

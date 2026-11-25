@@ -1,30 +1,52 @@
 ---
 title: Photo Library and Backups
 short_title: Photos + backups
-summary: Immich as a private Google Photos for family and friends, and an encrypted 3-2-1 backup with restic to a local disk and Google Drive, using two keys.
+summary: Immich as a private Google Photos for family and friends, and an encrypted 3-2-1 backup with restic to
+  a local disk and Google Drive, using two keys.
+icon: 📸
+highlights:
+- Private Google Photos for family
+- 'restic 3-2-1: local disk + encrypted Drive'
+- Daily key + paper break-glass key
 status: building
 area: homelab
 rank: 5
 started: 2026-10
 role: Solo
-stack: [Immich, Docker, PostgreSQL, restic, rclone, Google Drive API (OAuth), cron]
-focus: [infra]
-tags: [Docker, Self-hosting, Backups, Security, Linux, Bash]
+stack:
+- Immich
+- Docker
+- PostgreSQL
+- restic
+- rclone
+- Google Drive API (OAuth)
+- cron
+focus:
+- infra
+tags:
+- Docker
+- Self-hosting
+- Backups
+- Security
+- Linux
+- Bash
 links:
-  - { label: "Privacy policy for the backup app", url: /privacy/ }
+- label: Privacy policy for the backup app
+  url: /privacy/
 timeline:
-  - date: 2026-10
-    text: Fresh Immich install on the media VM, one account per person. Originals on the pooled drives, thumbnails on the HDD.
-  - date: 2026-10
-    text: Machine learning (faces, search, duplicates) turned back on after the Proxmox host's RAM upgrade.
-  - date: 2026-11
-    text: Backup design settled. restic to a local repository plus an encrypted copy in Google Drive, through my own OAuth app.
-  - date: 2026-11
-    text: Two keys. A daily key in password managers, and a handwritten break-glass key on paper.
-  - date: 2026-12
-    text: Make sure every phone is auto-uploading, then switch the nightly backup on and add it to the morning report.
+- date: 2026-10
+  text: Fresh Immich install on the media VM, one account per person. Originals on the pooled drives, thumbnails
+    on the HDD.
+- date: 2026-10
+  text: Machine learning (faces, search, duplicates) turned back on after the Proxmox host's RAM upgrade.
+- date: 2026-11
+  text: Backup design settled. restic to a local repository plus an encrypted copy in Google Drive, through my own
+    OAuth app.
+- date: 2026-11
+  text: Two keys. A daily key in password managers, and a handwritten break-glass key on paper.
+- date: 2026-12
+  text: Make sure every phone is auto-uploading, then switch the nightly backup on and add it to the morning report.
 ---
-
 Immich gives the household a Google Photos-style app (phone auto-upload, faces, search) without handing the photos to anyone. It's the one service where losing data would actually hurt, so most of this project is about backups.
 
 ## Layout

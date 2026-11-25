@@ -1,36 +1,64 @@
 ---
 title: Homelab
 short_title: Homelab
-summary: A Raspberry Pi NAS that grew into Proxmox VMs, an OPNsense firewall with five VLANs, and remote access through Tailscale and Cloudflare. Every other homelab project runs on this.
+summary: A Raspberry Pi NAS that grew into Proxmox VMs, an OPNsense firewall with five VLANs, and remote access
+  through Tailscale and Cloudflare. Every other homelab project runs on this.
+icon: 🗄️
+highlights:
+- Pi 5 NAS → Proxmox VMs with iGPU passthrough
+- OPNsense firewall routing five VLANs
+- Tailscale for me, Cloudflare Tunnel + Access for friends
 status: live
 area: homelab
 rank: 1
 started: 2026-04
 role: Design, build and day-to-day operation (the Proxmox host is shared with a roommate)
-stack: [Proxmox, Debian, OpenMediaVault, Docker, OPNsense, Tailscale, Cloudflare Tunnel, mergerfs]
-focus: [infra]
-tags: [Linux, Docker, Proxmox, Networking, VLANs, OPNsense, Tailscale, Cloudflare, Raspberry Pi, Self-hosting]
+stack:
+- Proxmox
+- Debian
+- OpenMediaVault
+- Docker
+- OPNsense
+- Tailscale
+- Cloudflare Tunnel
+- mergerfs
+focus:
+- infra
+tags:
+- Linux
+- Docker
+- Proxmox
+- Networking
+- VLANs
+- OPNsense
+- Tailscale
+- Cloudflare
+- Raspberry Pi
+- Self-hosting
 timeline:
-  - date: 2026-04
-    text: First Raspberry Pi 5 arrives and becomes a NAS running OpenMediaVault and Samba, with Tailscale for remote access.
-  - date: 2026-04
-    text: Tried network-booting a small Pi cluster from one SSD. Shelved; the cluster idea is parked for now.
-  - date: 2026-06
-    text: Repurposed an HP Z240 workstation. It started as a CPU-only LLM box, then became a small hosting server.
-  - date: 2026-06
-    text: Planned a Pi-hole + Unbound DNS stack on a Pi 3B. Never deployed. The Pi's 100 Mbps NIC was a bottleneck, and OPNsense later made it unnecessary.
-  - date: 2026-09
-    text: Storage and services moved off the Pi into a Debian VM on a Proxmox host, with the Intel iGPU passed through and two 2 TB drives pooled with mergerfs.
-  - date: 2026-10
-    text: OPNsense VM takes over routing. Five VLANs through a managed switch; VMs can only reach each other through firewall rules.
-  - date: 2026-10
-    text: The old Pi 5 is retired from NAS duty and becomes a dedicated Tailscale exit node.
-  - date: 2026-11
-    text: Public apps move from Tailscale Funnel to Cloudflare Tunnel behind Cloudflare Access.
-  - date: 2026-11
-    text: Claude starts running the homelab's daily health check through a custom MCP server. See the [ops agent](/ops-agent/).
+- date: 2026-04
+  text: First Raspberry Pi 5 arrives and becomes a NAS running OpenMediaVault and Samba, with Tailscale for remote
+    access.
+- date: 2026-04
+  text: Tried network-booting a small Pi cluster from one SSD. Shelved; the cluster idea is parked for now.
+- date: 2026-06
+  text: Repurposed an HP Z240 workstation. It started as a CPU-only LLM box, then became a small hosting server.
+- date: 2026-06
+  text: Planned a Pi-hole + Unbound DNS stack on a Pi 3B. Never deployed. The Pi's 100 Mbps NIC was a bottleneck,
+    and OPNsense later made it unnecessary.
+- date: 2026-09
+  text: Storage and services moved off the Pi into a Debian VM on a Proxmox host, with the Intel iGPU passed through
+    and two 2 TB drives pooled with mergerfs.
+- date: 2026-10
+  text: OPNsense VM takes over routing. Five VLANs through a managed switch; VMs can only reach each other through
+    firewall rules.
+- date: 2026-10
+  text: The old Pi 5 is retired from NAS duty and becomes a dedicated Tailscale exit node.
+- date: 2026-11
+  text: Public apps move from Tailscale Funnel to Cloudflare Tunnel behind Cloudflare Access.
+- date: 2026-11
+  text: Claude starts running the homelab's daily health check through a custom MCP server. See the [ops agent](/ops-agent/).
 ---
-
 This is the platform everything else runs on: the [media server](/media-stack/), [music](/music-stack/), [photos](/immich/), the [couch game box](/couch-box/) and the [ops agent](/ops-agent/) that watches over all of it. It started as one Raspberry Pi in April 2026 and has been rebuilt twice since.
 
 ## What it looks like now

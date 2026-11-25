@@ -5,6 +5,11 @@ status: retired
 area: embedded
 summary: Arduino Mega and a DS3231 in a 3D-printed enclosure, with calendar math (DST included) written from scratch
   and a scrapped side-scroller.
+icon: 🕐
+highlights:
+- Calendar + DST math from scratch
+- Fought the Mega's memory limits
+- Custom 3D-printed enclosure
 tags:
 - Arduino C++
 - 3D printing

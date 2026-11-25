@@ -5,6 +5,11 @@ status: dormant
 area: embedded
 summary: A standalone kitchen timer with an animated egg on an SSD1306 OLED, plus a Home Assistant dashboard that
   notifies whoever started it.
+icon: 🥚
+highlights:
+- Animated egg on an SSD1306 OLED
+- Per-roommate notifications
+- Two prototypes, never merged
 tags:
 - ESP8266
 - OLED

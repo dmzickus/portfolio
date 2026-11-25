@@ -1,34 +1,63 @@
 ---
 title: Self-Hosted Media Server
 short_title: Media server
-summary: Jellyfin for the apartment and family, with request-driven library automation, a 2 TB size budget, hardware transcoding, and a nightly "preshow" of vintage trailers before movies.
+summary: Jellyfin for the apartment and family, with request-driven library automation, a 2 TB size budget, hardware
+  transcoding, and a nightly "preshow" of vintage trailers before movies.
+icon: 🎬
+highlights:
+- Request → library automation → Jellyfin
+- 2 TB budget enforced by cleanup rules
+- Nightly vintage 'preshow' before movies
 status: live
 area: homelab
 rank: 3
 started: 2026-04
 role: Solo; used daily by roommates, friends and family
-stack: [Jellyfin, Docker, Sonarr, Radarr, Seerr, Maintainerr, WireGuard (Gluetun), Intel Quick Sync, ffmpeg]
-focus: [infra]
-tags: [Docker, Linux, Jellyfin, ffmpeg, WireGuard, Networking, Self-hosting, Automation, Bash]
+stack:
+- Jellyfin
+- Docker
+- Sonarr
+- Radarr
+- Seerr
+- Maintainerr
+- WireGuard (Gluetun)
+- Intel Quick Sync
+- ffmpeg
+focus:
+- infra
+tags:
+- Docker
+- Linux
+- Jellyfin
+- ffmpeg
+- WireGuard
+- Networking
+- Self-hosting
+- Automation
+- Bash
 timeline:
-  - date: 2026-04
-    text: Jellyfin installed natively on a Raspberry Pi 5 next to OpenMediaVault.
-  - date: 2026-05
-    text: Request-driven library management with Seerr, Sonarr and Radarr. Download clients isolated inside a WireGuard container's network namespace.
-  - date: 2026-07
-    text: Codec audit of 352 files (740 GB). Remote transcoding node built over Tailscale. See [Tdarr pipeline](/tdarr-transcoding/).
-  - date: 2026-07
-    text: Upload-speed analysis from 580 daily speed tests sets an 8 Mbps per-stream cap, enough for three remote streams without transcoding.
-  - date: 2026-09
-    text: Migrated to a Proxmox VM. Jellyfin containerized with Quick Sync passthrough; watch history and app data carried over.
-  - date: 2026-11
-    text: Quality rules switched to HEVC with 5.1 audio now that the server can transcode in hardware. Space became the constraint.
-  - date: 2026-11
-    text: A 2 TB budget, enforced by Maintainerr cleanup rules with a grace period. Anything someone watched, requested or favorited is kept.
-  - date: 2026-11
-    text: Nightly generated "preshows" for Jellyfin cinema mode, with local trailers and vintage theater bumpers.
+- date: 2026-04
+  text: Jellyfin installed natively on a Raspberry Pi 5 next to OpenMediaVault.
+- date: 2026-05
+  text: Request-driven library management with Seerr, Sonarr and Radarr. Download clients isolated inside a WireGuard
+    container's network namespace.
+- date: 2026-07
+  text: Codec audit of 352 files (740 GB). Remote transcoding node built over Tailscale. See [Tdarr pipeline](/tdarr-transcoding/).
+- date: 2026-07
+  text: Upload-speed analysis from 580 daily speed tests sets an 8 Mbps per-stream cap, enough for three remote
+    streams without transcoding.
+- date: 2026-09
+  text: Migrated to a Proxmox VM. Jellyfin containerized with Quick Sync passthrough; watch history and app data
+    carried over.
+- date: 2026-11
+  text: Quality rules switched to HEVC with 5.1 audio now that the server can transcode in hardware. Space became
+    the constraint.
+- date: 2026-11
+  text: A 2 TB budget, enforced by Maintainerr cleanup rules with a grace period. Anything someone watched, requested
+    or favorited is kept.
+- date: 2026-11
+  text: Nightly generated "preshows" for Jellyfin cinema mode, with local trailers and vintage theater bumpers.
 ---
-
 The media server replaced streaming subscriptions for the apartment and a few family members. People request a movie or show from a web page, it shows up in Jellyfin a while later, and it plays on the living room Roku, phones, or laptops anywhere.
 
 ## The pieces

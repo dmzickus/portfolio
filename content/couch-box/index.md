@@ -1,32 +1,58 @@
 ---
 title: Couch Game Box and Untrusted-File Pipeline
 short_title: Couch game box
-summary: A small PC under the TV that boots straight into a controller-driven game menu, fed by a pipeline that treats every downloaded file as hostile. Quarantine, hashing, multi-engine scanning, an approval step, and offline installs on an isolated machine.
+summary: A small PC under the TV that boots straight into a controller-driven game menu, fed by a pipeline that
+  treats every downloaded file as hostile. Quarantine, hashing, multi-engine scanning, an approval step, and offline
+  installs on an isolated machine.
+icon: 🎮
+highlights:
+- Boots straight to a controller menu
+- Library mounted read-only over NFS
+- Every download treated as hostile
 status: building
 area: homelab
 rank: 6
 started: 2026-10
 role: Solo (the PC is a roommate's)
-stack: [Bazzite Linux, RetroDECK / ES-DE, Wine / umu, NFS, Samba, VirusTotal API, Windows Defender, systemd timers, Tailscale ACLs]
-focus: [infra]
-tags: [Linux, Security, Networking, VLANs, Automation, Bash, Python, Self-hosting]
+stack:
+- Bazzite Linux
+- RetroDECK / ES-DE
+- Wine / umu
+- NFS
+- Samba
+- VirusTotal API
+- Windows Defender
+- systemd timers
+- Tailscale ACLs
+focus:
+- infra
+tags:
+- Linux
+- Security
+- Networking
+- VLANs
+- Automation
+- Bash
+- Python
+- Self-hosting
 timeline:
-  - date: 2026-10
-    text: A Dell OptiPlex mini PC becomes the couch box. Bazzite boots straight into a controller-driven menu; the library is a read-only NFS mount from the NAS.
-  - date: 2026-10
-    text: First intake pipeline. Downloads land in a drop folder, get hashed and checked against VirusTotal, then a Defender scan runs.
-  - date: 2026-10
-    text: Redesigned as "assume infected." Detection is a filter, not a guarantee, so containment does the real work.
-  - date: 2026-11
-    text: A fake installer tried to download extra files. New Windows installs now need my approval and run offline.
-  - date: 2026-11
-    text: Library shares locked down; game folders read-only, with a separate drop share for adding new ones.
-  - date: 2026-11
-    text: The couch box joins the ops agent's daily check, including items held for review or quarantined.
-  - date: 2026-12
-    text: Move the box onto the isolated VLAN and replace the default allow-all Tailscale policy with ACLs.
+- date: 2026-10
+  text: A Dell OptiPlex mini PC becomes the couch box. Bazzite boots straight into a controller-driven menu; the
+    library is a read-only NFS mount from the NAS.
+- date: 2026-10
+  text: First intake pipeline. Downloads land in a drop folder, get hashed and checked against VirusTotal, then
+    a Defender scan runs.
+- date: 2026-10
+  text: Redesigned as "assume infected." Detection is a filter, not a guarantee, so containment does the real work.
+- date: 2026-11
+  text: A fake installer tried to download extra files. New Windows installs now need my approval and run offline.
+- date: 2026-11
+  text: Library shares locked down; game folders read-only, with a separate drop share for adding new ones.
+- date: 2026-11
+  text: The couch box joins the ops agent's daily check, including items held for review or quarantined.
+- date: 2026-12
+  text: Move the box onto the isolated VLAN and replace the default allow-all Tailscale policy with ACLs.
 ---
-
 The apartment wanted one box under the TV for retro games and party games that anyone could use with a controller. It shouldn't need a keyboard or someone technical. The interesting part turned out to be getting games *onto* it safely.
 
 ## The box

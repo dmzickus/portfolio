@@ -50,6 +50,17 @@ To feature a project on the homepage, add its folder name to `featured` in `cont
 | retired | 1 | Taken down or replaced |
 | planned | outline | An idea, not built yet |
 
+## Photos
+
+Drop `content/<slug>/images/cover.jpg` (or `.png`/`.webp`, roughly 16:10) and it replaces the
+placeholder on the homepage carousel, the timeline and the project page.
+
+## robots.txt and the honeypot
+
+`robots.txt` disallows `/signal-lost/`. Every page has an invisible link there, so only crawlers that
+ignore robots.txt follow it, into a maze of 48 noindex nonsense pages that only link to each other.
+GitHub Pages can't block anyone; banning visitors who hit the trap would need a Cloudflare Worker.
+
 ## Hidden pages
 
 `hidden: true` builds a page without listing it anywhere. `/privacy/` and `/terms/` exist for the rclone Google OAuth app and must keep working.

@@ -5,6 +5,11 @@ status: dormant
 area: embedded
 summary: Non-invasive current sensing to send a notification when the washer, dryer or dishwasher finishes. Circuit
   verified on an oscilloscope; stalled on ESP ADC noise.
+icon: ⚡
+highlights:
+- Non-invasive current sensing
+- Verified on an oscilloscope
+- Blocked by ESP8266 ADC noise
 tags:
 - ADC
 - Oscilloscope

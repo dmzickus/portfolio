@@ -5,6 +5,11 @@ status: retired
 area: embedded
 summary: A reed switch and a DHT11 feed a three-state occupancy machine that runs the bathroom light, with shower
   detection for the fan.
+icon: 🚿
+highlights:
+- Reed switch + DHT11 occupancy machine
+- Sensors are always the source of truth
+- Shower detection for the fan
 tags:
 - ESP8266
 - State machine

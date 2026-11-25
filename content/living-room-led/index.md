@@ -5,6 +5,11 @@ status: live
 area: embedded
 summary: A salvaged LED strip with its IR receiver desoldered and an ESP8266 driving the channels directly, with
   per-channel color correction.
+icon: 💡
+highlights:
+- Salvaged strip, IR receiver desoldered
+- ESP8266 PWM straight to the channels
+- Software color correction for a weak red
 tags:
 - ESP8266
 - PWM

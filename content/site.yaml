@@ -7,21 +7,20 @@ description: >-
 
 # Homepage intro (Markdown allowed)
 intro: >-
-  I'm a computer science student at WPI. I run a homelab, build smart-home hardware, and
-  write the software that keeps both running. I'm looking for a **Summer 2027 software or
-  systems internship** near Boston or Worcester.
+  I'm Dylan, a CS student at WPI. I run a homelab, build smart-home hardware, and write the
+  software that keeps both running. Looking for a **Summer 2027 software or systems
+  internship** near Boston or Worcester.
 
 hero_links:
-  - { label: Resume, url: /resume/ }
-  - { label: GitHub, url: "https://github.com/dmzickus" }
-  - { label: LinkedIn, url: "https://www.linkedin.com/in/dylanzickus" }
-  - { label: dmzickus@wpi.edu, url: "mailto:dmzickus@wpi.edu" }
+  - { label: See the project timeline, url: /projects/ }
+  - { label: Read my resume, url: /resume/ }
+  - { label: More about me, url: /about/ }
 
-footer_links: []
 links:
-  - { label: GitHub, url: "https://github.com/dmzickus" }
-  - { label: LinkedIn, url: "https://www.linkedin.com/in/dylanzickus" }
-  - { label: Email, url: "mailto:dmzickus@wpi.edu" }
+  - { label: GitHub, url: "https://github.com/dmzickus", icon: github }
+  - { label: LinkedIn, url: "https://www.linkedin.com/in/dylanzickus", icon: linkedin }
+  - { label: Email, url: "mailto:dmzickus@wpi.edu", icon: email }
+  - { label: Resume, url: /resume/, icon: resume }
 
 # "Start here" on the homepage, in this order (project folder names)
 featured:
@@ -37,3 +36,12 @@ redirects:
   /media-stack/infrastructure.html: /homelab/
   /media-stack/vpn-routing.html: /media-stack/
   /media-stack/tdarr.html: /tdarr-transcoding/
+
+# Tag chip colours (green, red, cyan, purple, orange, yellow; anything unlisted is grey)
+tag_colors:
+  green: [Linux, Docker, Proxmox, Networking, VLANs, OPNsense, Tailscale, Cloudflare, Self-hosting, systemd, Backups, Security, Automation, Raspberry Pi, WireGuard]
+  red: [ESP8266, ESP32, Arduino C++, ADC, Oscilloscope, Hardware debugging, Resistor ladder, State machine, DHT11, OLED, PWM, Rotary encoder, Memory limits, MQTT]
+  orange: [3D printing]
+  cyan: [TypeScript, React, PostgreSQL, AWS, PHP, SQL, Swift, Semantic search]
+  purple: [Python, Bash, MCP, AI agents, ffmpeg, YAML]
+  yellow: [Home Assistant, Voice, Zigbee, Jellyfin]

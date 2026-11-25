@@ -1,30 +1,52 @@
 ---
 title: ESP Builds
 short_title: ESP builds
-summary: Every custom microcontroller device I've built for the dorm and the apartment, what each one taught me, and the planned ESP-NOW rewrite that brings them back.
+summary: Every custom microcontroller device I've built for the dorm and the apartment, what each one taught me,
+  and the planned ESP-NOW rewrite that brings them back.
+icon: 🔌
+highlights:
+- Ten-plus custom ESP devices
+- Each one taught a specific lesson
+- ESP-NOW gateway rewrite planned
 status: dormant
 area: embedded
 rank: 2
 started: 2024-09
 role: Solo, some builds with a roommate
-stack: [ESP8266, ESP32, Arduino C++, MQTT, Home Assistant, KiCad, FDM 3D printing]
-focus: [embedded]
-tags: [ESP8266, ESP32, Arduino C++, MQTT, Home Assistant, 3D printing, Hardware debugging]
+stack:
+- ESP8266
+- ESP32
+- Arduino C++
+- MQTT
+- Home Assistant
+- KiCad
+- FDM 3D printing
+focus:
+- embedded
+tags:
+- ESP8266
+- ESP32
+- Arduino C++
+- MQTT
+- Home Assistant
+- 3D printing
+- Hardware debugging
 timeline:
-  - date: 2024-09
-    text: Dorm builds. A chair pressure sensor runs the desk lights, and an overengineered RTC clock.
-  - date: 2025
-    text: Apartment builds on MQTT, including the bathroom controller, LED strip, alarm keypad, switch knob, egg timer and appliance monitor.
-  - date: 2025
-    text: Smaller builds. Spotty the lizard's Alexa-triggered water pump, motorized blinds, and a fridge milk scale.
-  - date: 2026-08
-    text: Scoped a common pattern for push-button appliances (window ACs, an air purifier, a desk lamp). An ESP32 and relays "press" the buttons and track state.
-  - date: 2026-11
-    text: Most of the fleet is offline. The light knob is getting MQTT OTA updates as the template for the rewrite.
-  - date: 2027
-    text: ESP-NOW rewrite. Devices talk to one gateway instead of Wi-Fi, with OTA updates and shared firmware.
+- date: 2024-09
+  text: Dorm builds. A chair pressure sensor runs the desk lights, and an overengineered RTC clock.
+- date: 2025
+  text: Apartment builds on MQTT, including the bathroom controller, LED strip, alarm keypad, switch knob, egg timer
+    and appliance monitor.
+- date: 2025
+  text: Smaller builds. Spotty the lizard's Alexa-triggered water pump, motorized blinds, and a fridge milk scale.
+- date: 2026-08
+  text: Scoped a common pattern for push-button appliances (window ACs, an air purifier, a desk lamp). An ESP32
+    and relays "press" the buttons and track state.
+- date: 2026-11
+  text: Most of the fleet is offline. The light knob is getting MQTT OTA updates as the template for the rewrite.
+- date: 2027
+  text: ESP-NOW rewrite. Devices talk to one gateway instead of Wi-Fi, with OTA updates and shared firmware.
 ---
-
 These are the custom devices around the apartment. Most of them are **offline right now**. Breadboards came apart, people moved rooms, and Alexa made a couple of them redundant. The write-ups stay up because each one taught me something I still use.
 
 ## The builds

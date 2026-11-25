@@ -5,6 +5,11 @@ status: live
 area: embedded
 summary: A 3D-printed mount over the wall switch with an ESP32 and rotary encoder. It sends relative steps instead
   of absolute levels, so it never fights Home Assistant over state.
+icon: 🎛️
+highlights:
+- 3D-printed mount over the wall switch
+- Sends relative steps, never absolute state
+- Getting OTA updates over MQTT
 tags:
 - ESP32
 - Rotary encoder

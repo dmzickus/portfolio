@@ -1,32 +1,58 @@
 ---
 title: Apartment Smart Home
 short_title: Smart home
-summary: Home Assistant for a four-person apartment, built around voice and physical buttons rather than an app. Zigbee, MQTT and custom ESP devices, plus a light-effects engine that hands rooms back exactly as it found them.
+summary: Home Assistant for a four-person apartment, built around voice and physical buttons rather than an app.
+  Zigbee, MQTT and custom ESP devices, plus a light-effects engine that hands rooms back exactly as it found them.
+icon: 🏠
+highlights:
+- Built for voice and buttons, not the app
+- Zigbee + MQTT + mmWave presence
+- Light effects that restore every room
 status: live
 area: embedded
 rank: 1
 started: 2024-08
 role: Built and maintained by me; roommates have their own dashboards
-stack: [Home Assistant OS, Raspberry Pi 5, Zigbee (ZHA), Mosquitto MQTT, Alexa (Nabu Casa), Matter, mmWave presence sensors]
-focus: [embedded]
-tags: [Home Assistant, MQTT, Zigbee, Voice, Automation, Raspberry Pi, YAML, Self-hosting]
+stack:
+- Home Assistant OS
+- Raspberry Pi 5
+- Zigbee (ZHA)
+- Mosquitto MQTT
+- Alexa (Nabu Casa)
+- Matter
+- mmWave presence sensors
+focus:
+- embedded
+tags:
+- Home Assistant
+- MQTT
+- Zigbee
+- Voice
+- Automation
+- Raspberry Pi
+- YAML
+- Self-hosting
 timeline:
-  - date: 2024-08
-    text: First Home Assistant setup in my dorm. A chair pressure sensor drives the desk lights, and a phone-charging "bedtime" routine turns everything off.
-  - date: 2025
-    text: Moved to the apartment. Zigbee bulbs in every room, a Mosquitto broker for ESP devices, and Alexa through Nabu Casa.
-  - date: 2025
-    text: mmWave presence sensors pick up people sitting still, so lights stop turning off on someone reading.
-  - date: 2026-10
-    text: The SD card corrupted. Rebuilt from backups on wired ethernet with a static IP; nightly backups now go to the cloud too.
-  - date: 2026-11
-    text: Cleanup around how the household actually uses it. A curated Alexa device list, physical buttons, and dashboards only for what voice can't do.
-  - date: 2026-11
-    text: Built a light-effects engine. Rainbow, spooky and holiday modes per room, with snapshot and restore so lights go back to how they were.
-  - date: 2026-11
-    text: Music Assistant and a custom Alexa skill bring the music library and TV control to voice. See [Music + voice](/music-stack/).
+- date: 2024-08
+  text: First Home Assistant setup in my dorm. A chair pressure sensor drives the desk lights, and a phone-charging
+    "bedtime" routine turns everything off.
+- date: 2025
+  text: Moved to the apartment. Zigbee bulbs in every room, a Mosquitto broker for ESP devices, and Alexa through
+    Nabu Casa.
+- date: 2025
+  text: mmWave presence sensors pick up people sitting still, so lights stop turning off on someone reading.
+- date: 2026-10
+  text: The SD card corrupted. Rebuilt from backups on wired ethernet with a static IP; nightly backups now go to
+    the cloud too.
+- date: 2026-11
+  text: Cleanup around how the household actually uses it. A curated Alexa device list, physical buttons, and dashboards
+    only for what voice can't do.
+- date: 2026-11
+  text: Built a light-effects engine. Rainbow, spooky and holiday modes per room, with snapshot and restore so lights
+    go back to how they were.
+- date: 2026-11
+  text: Music Assistant and a custom Alexa skill bring the music library and TV control to voice. See [Music + voice](/music-stack/).
 ---
-
 Four people live in the apartment and almost nobody opens the Home Assistant app. So the system is built around how people actually control things: **Alexa**, a few **physical buttons**, and automations that guess right. Dashboards are for the stuff voice can't do.
 
 ## Hardware

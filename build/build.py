@@ -114,22 +114,38 @@ def month_label(key):
 
 # ── components ──────────────────────────────────────────────────────────
 
-def bars(status: str, size: str = "") -> str:
-    label, lit, _ = STATUSES.get(status, STATUSES["planned"])
+AREA_ACCENT = {"homelab": "teal", "embedded": "amber", "software": "blue", "other": "pink"}
+TAG_COLORS: dict[str, str] = {}   # filled from site.yaml: tag (lowercase) -> colour name
+
+
+def bars(status: str) -> str:
+    _, lit, _ = STATUSES.get(status, STATUSES["planned"])
     spans = "".join(f'<i class="{"on" if i < lit else "off"}"></i>' for i in range(4))
-    cls = f"bars bars-{status}" + (f" bars-{size}" if size else "")
-    return f'<span class="{cls}" aria-hidden="true">{spans}</span>'
+    return f'<span class="bars bars-{status}" aria-hidden="true">{spans}</span>'
 
 
-def status_pill(status: str) -> str:
+def badge(status: str) -> str:
     label = STATUSES.get(status, STATUSES["planned"])[0]
-    return f'<span class="status status-{status}">{bars(status)}<span>{label}</span></span>'
+    return f'<span class="badge badge-{status}">{bars(status)}{label}</span>'
 
 
 def tag_list(tags, cls="tags") -> str:
     if not tags:
         return ""
-    return f'<ul class="{cls}">' + "".join(f"<li>{esc(t)}</li>" for t in tags) + "</ul>"
+    return f'<ul class="{cls}">' + "".join(
+        f'<li class="tag tag-{TAG_COLORS.get(t.lower(), "grey")}">{esc(t)}</li>' for t in tags) + "</ul>"
+
+
+def cover(p, cls="") -> str:
+    """Project image: images/cover.* if present, otherwise a labelled placeholder."""
+    for ext in ("jpg", "jpeg", "png", "webp"):
+        if (p["dir"] / "images" / f"cover.{ext}").exists():
+            return (f'<div class="cover {cls}"><img src="/{p["slug"]}/images/cover.{ext}" '
+                    f'alt="{esc(p.get("cover_alt", p["title"]))}" loading="lazy"></div>')
+    accent = AREA_ACCENT.get(p["area"], "teal")
+    return (f'<div class="cover cover-ph ph-{accent} {cls}" role="img" aria-label="Photo coming soon">'
+            f'<span class="ph-icon" aria-hidden="true">{esc(p.get("icon", "🔧"))}</span>'
+            f'<span class="ph-note">photo coming soon</span></div>')
 
 
 def data_attrs(p, extra_text="") -> str:
@@ -140,32 +156,275 @@ def data_attrs(p, extra_text="") -> str:
             f'data-tags="{esc(tags)}" data-search="{esc(search)}"')
 
 
-def filter_bar(projects, with_tags: bool) -> str:
+def filter_bar(projects) -> str:
     areas = "".join(
         f'<button type="button" data-filter="area" data-value="{k}" aria-pressed="false">{v}</button>'
         for k, v in AREAS.items() if any(p["area"] == k for p in projects))
     statuses = "".join(
         f'<button type="button" data-filter="status" data-value="{k}" aria-pressed="false" title="{esc(d)}">'
-        f'{bars(k)}<span>{label}</span></button>'
+        f'{bars(k)}{label}</button>'
         for k, (label, _, d) in STATUSES.items() if any(p["status"] == k for p in projects))
-    tags_html = ""
-    if with_tags:
-        counts = {}
-        for p in projects:
-            for t in p.get("tags", []):
-                counts[t] = counts.get(t, 0) + 1
-        common = sorted((t for t, c in counts.items() if c >= 2), key=lambda t: (-counts[t], t.lower()))
-        tags_html = ('<div class="filter-row filter-tags" role="group" aria-label="Tags">'
-                     + "".join(f'<button type="button" data-filter="tag" data-value="{esc(t.lower())}" '
-                               f'aria-pressed="false">{esc(t)}</button>' for t in common) + "</div>")
     return f'''<div class="filters" data-filters>
-  <label class="search"><span class="visually-hidden">Search projects</span>
-    <input type="search" placeholder="Search: Docker, MQTT, ESP32…" data-search-input autocomplete="off"></label>
+  <label class="search"><span class="visually-hidden">Filter by tag or word</span>
+    <input type="search" placeholder="Filter by tag or word… (docker, mqtt, esp32)" data-search-input autocomplete="off"></label>
   <div class="filter-row" role="group" aria-label="Area">{areas}</div>
   <div class="filter-row" role="group" aria-label="Status">{statuses}</div>
-  {tags_html}
   <p class="filter-empty" data-empty hidden>Nothing matches. <button type="button" data-clear>Clear filters</button></p>
 </div>'''
+
+
+def mini_card(p) -> str:
+    return f'''<li class="mcard"><a href="/{p["slug"]}/">{cover(p, "cover-thumb")}
+      <span class="mcard-title">{bars(p["status"])}{esc(p.get("short_title", p["title"]))}</span></a></li>'''
+
+
+# ── page shell ─────────────────────────────────────────────────────────
+
+NAV = [("/projects/", "Projects"), ("/resume/", "Resume"), ("/about/", "About")]
+
+
+def shell(site, *, title, desc, body, path, body_class="", og_type="website", crumb=""):
+    tpl = read(TEMPLATES / "base.html")
+    nav = "".join(
+        f'<a href="{h}"{" aria-current=\"page\"" if path.startswith(h) else ""}>{l}</a>' for h, l in NAV)
+    if crumb:
+        nav = nav.replace('<a href="/projects/" aria-current="page">Projects</a>',
+                          f'<a href="/projects/">Projects</a><span class="nav-sep">/</span>'
+                          f'<span class="nav-here">{esc(crumb)}</span>')
+    full_title = title if title == site["name"] else f"{title} · {site['name']}"
+    vals = {
+        "TITLE": esc(full_title),
+        "DESC": esc(desc or site["description"]),
+        "CANONICAL": esc(SITE_URL + path),
+        "OG_TYPE": og_type,
+        "NAV": nav,
+        "BODY": body,
+        "BODY_CLASS": body_class,
+        "SOCIAL": social_links(site),
+        "YEAR": str(dt.date.today().year),
+    }
+    out = tpl
+    for k, v in vals.items():
+        out = out.replace("{{" + k + "}}", v)
+    return out
+
+
+ICONS = {
+    "github": '<path d="M9 19c-4.3 1.4-4.3-2.5-6-3m12 5v-3.5c0-1 .1-1.4-.5-2 2.8-.3 5.5-1.4 5.5-6a4.6 4.6 0 0 0-1.3-3.2 4.2 4.2 0 0 0-.1-3.2s-1.1-.3-3.5 1.3a12.3 12.3 0 0 0-6.2 0C6.5 2.8 5.4 3.1 5.4 3.1a4.2 4.2 0 0 0-.1 3.2A4.6 4.6 0 0 0 4 9.5c0 4.6 2.7 5.7 5.5 6-.6.6-.6 1.2-.5 2V21"/>',
+    "linkedin": '<path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6zM2 9h4v12H2z"/><circle cx="4" cy="4" r="2"/>',
+    "email": '<rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 6L2 7"/>',
+    "resume": '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h8M8 9h2"/>',
+}
+
+
+def social_links(site) -> str:
+    out = []
+    for l in site["links"]:
+        ic = ICONS.get(l.get("icon", ""), "")
+        svg = (f'<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" '
+               f'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">{ic}</svg>') if ic else ""
+        out.append(f'<a href="{esc(l["url"])}">{svg}<span>{esc(l["label"])}</span></a>')
+    return "".join(out)
+
+
+def write(path: str, text: str):
+    p = OUT / path.lstrip("/")
+    if path.endswith("/"):
+        p = p / "index.html"
+    p.parent.mkdir(parents=True, exist_ok=True)
+    p.write_text(text, encoding="utf-8")
+
+
+def latest_key(p):
+    """Most recent timeline date (or start) — 'what's been happening' order for the carousel."""
+    keys = [parse_date(e.get("date"))[0] for e in p["timeline"] if parse_date(e.get("date"))]
+    today = dt.date.today()
+    keys = [k for k in keys if k[:2] <= (today.year, today.month)] or keys
+    return max(keys) if keys else (p["_start"] or ((0, 0, 0), ""))[0]
+
+
+# ── homepage ──────────────────────────────────────────────────────────
+
+def build_home(site, projects):
+    visible = [p for p in projects if not p.get("hidden")]
+    # carousel: chronological by start date, oldest → newest; the page opens scrolled to the newest
+    order = sorted(visible, key=lambda p: ((p["_start"] or ((9999, 0, 0), ""))[0], p["title"]))
+    years = []
+    slides = []
+    for p in order:
+        y = (p["_start"] or ((0, 0, 0), ""))[0][0]
+        if y and y not in years:
+            years.append(y)
+        slides.append(f'''<li class="slide" {data_attrs(p)} data-year="{y}">
+        <a href="/{p["slug"]}/">
+          <h3>{esc(p.get("short_title", p["title"]))}</h3>
+          <div class="slide-card">
+            {cover(p, "cover-slide")}
+            <p class="slide-desc">{esc(p.get("summary", ""))}</p>
+            <p class="slide-meta">{badge(p["status"])}<span>{esc(project_date_range(p))}</span></p>
+          </div>
+        </a>
+      </li>''')
+    scrub = "".join(f'<button type="button" data-year-jump="{y}">{y}</button>' for y in years)
+    links = "".join(f'<li><a href="{esc(l["url"])}">{esc(l["label"])}<span class="arrow" aria-hidden="true">→</span></a></li>'
+                    for l in site["hero_links"])
+    body = f'''
+<section class="home-hero">
+  <div class="hero-bg" aria-hidden="true"></div>
+  <button type="button" class="hero-mark" aria-label="Poke the signal">{read(STATIC / "brand" / "mark.svg")}</button>
+  <h1>{esc(site["person"])}</h1>
+  <p class="home-intro">{inline_md(site["intro"])}</p>
+  <ul class="home-links">{links}</ul>
+</section>
+
+<section class="carousel-wrap" aria-labelledby="carousel-h">
+  <div class="section-header"><h2 class="section-label" id="carousel-h">Project timeline</h2></div>
+  <div class="carousel" data-carousel>
+    <button type="button" class="car-btn car-prev" data-car-prev aria-label="Earlier projects"></button>
+    <div class="car-viewport" data-car-viewport tabindex="0" aria-label="Projects, oldest to newest. Scroll sideways.">
+      <ol class="car-track" data-car-track>{"".join(slides)}</ol>
+    </div>
+    <button type="button" class="car-btn car-next" data-car-next aria-label="Later projects"></button>
+  </div>
+  <div class="scrubber" data-scrubber aria-label="Jump to year">{scrub}<span class="scrub-signal" aria-hidden="true">{bars("live")}</span></div>
+</section>
+
+<section class="home-social">{social_links(site)}</section>'''
+    write("/", shell(site, title=site["name"], desc=site["description"], body=body, path="/", body_class="home"))
+
+
+# ── projects: vertical timeline ───────────────────────────────────────
+
+def build_projects_index(site, projects):
+    visible = [p for p in projects if not p.get("hidden")]
+    by_year = {}
+    for p in visible:
+        y = (p["_start"] or ((0, 0, 0), ""))[0][0]
+        by_year.setdefault(y, []).append(p)
+    groups = []
+    for y in sorted(by_year, reverse=True):
+        rows = []
+        for p in sorted(by_year[y], key=lambda p: (latest_key(p), p["title"]), reverse=True):
+            rows.append(f'''<li class="vrow" {data_attrs(p)}>
+          <a class="vrow-img" href="/{p["slug"]}/" tabindex="-1" aria-hidden="true">{cover(p, "cover-thumb")}</a>
+          <div class="vrow-body">
+            <h3><a href="/{p["slug"]}/">{esc(p["title"])}</a></h3>
+            <p class="vrow-meta"><span>{esc(project_date_range(p))}</span>{badge(p["status"])}</p>
+            {tag_list(p["tags"][:5])}
+            <p class="vrow-desc">{esc(p.get("summary", ""))}</p>
+          </div>
+        </li>''')
+        groups.append(f'<section class="vyear" data-group><h2 class="vyear-label">{y or "—"}</h2><ol>{"".join(rows)}</ol></section>')
+    legend = "".join(f'<li>{badge(k)}<span>{esc(d)}</span></li>' for k, (_, _, d) in STATUSES.items())
+    body = f'''
+<section class="page-top">
+  <h1>Projects</h1>
+  <p class="page-intro">Everything I've built, newest first. The signal bars show whether it's still running.</p>
+  <ul class="legend">{legend}</ul>
+  {filter_bar(visible)}
+</section>
+<section class="vtimeline" data-list>{"".join(groups)}</section>'''
+    write("/projects/", shell(site, title="Projects", desc="Homelab, embedded and software projects by Dylan Zickus.",
+                              body=body, path="/projects/", body_class="projects"))
+
+
+# ── project pages ─────────────────────────────────────────────────────
+
+H2_SPLIT = re.compile(r"(?=<h2[ >])")
+
+
+def sectioned(body_html: str, words: int) -> str:
+    """Long write-ups: every <h2> section becomes a collapsible block (first two open)."""
+    parts = H2_SPLIT.split(body_html)
+    if words < 700 or len(parts) < 4:
+        return body_html
+    out = [parts[0]]
+    for i, s in enumerate(parts[1:]):
+        m = re.match(r"<h2[^>]*>(.*?)</h2>", s, re.S)
+        title, rest = (m.group(1), s[m.end():]) if m else ("", s)
+        out.append(f'<details class="sec"{" open" if i < 2 else ""}><summary><h2>{title}</h2></summary>{rest}</details>')
+    return "".join(out)
+
+
+def build_project(site, p, projects):
+    log = ""
+    if p["timeline"]:
+        evs = sorted(p["timeline"], key=lambda e: (parse_date(e.get("date")) or ((0, 0, 0), ""))[0])
+        log = '<ol class="changelog">' + "".join(
+            f'<li><time>{esc((parse_date(e.get("date")) or (None, ""))[1])}</time> · {inline_md(e.get("text", ""))}</li>'
+            for e in evs) + "</ol>"
+
+    facts = [badge(p["status"])]
+    if project_date_range(p):
+        facts.append(f"<span>{esc(project_date_range(p))}</span>")
+    if p.get("role"):
+        facts.append(f"<span>{esc(p['role'])}</span>")
+    links = "".join(f'<a class="btn" href="{esc(l["url"])}">{esc(l["label"])} ↗</a>' for l in p.get("links", []))
+    hl = ""
+    if p.get("highlights"):
+        hl = '<ul class="highlights">' + "".join(f"<li>{esc(h)}</li>" for h in p["highlights"]) + "</ul>"
+    stack = (f'<p class="stack"><span class="label">Stack</span> {esc(" · ".join(p["stack"]))}</p>'
+             if p.get("stack") else "")
+
+    sub_nav = ""
+    if p["subpages"]:
+        sub_nav = ('<h2 class="small-h">More on this project</h2><ul class="sublist">'
+                   + "".join(f'<li><a href="/{p["slug"]}/{s["slug"]}.html">{esc(s.get("title", s["slug"]))}</a> '
+                             f'<span>{esc(s.get("summary", ""))}</span></li>' for s in p["subpages"]) + "</ul>")
+
+    tags = {t.lower() for t in p["tags"]}
+    rel = sorted((q for q in projects if q is not p and not q.get("hidden")),
+                 key=lambda q: (-(len(tags & {t.lower() for t in q["tags"]}) + (2 if q["area"] == p["area"] else 0)),
+                                q["title"]))[:3]
+    words = len(re.findall(r"\w+", p["body"]))
+    body = f'''
+<article class="project">
+  {cover(p, "cover-hero")}
+  <h1>{esc(p["title"])}</h1>
+  <p class="project-facts">{"".join(facts)}</p>
+  {tag_list(p["tags"])}
+  <p class="project-summary">{esc(p.get("summary", ""))}</p>
+  {hl}
+  {stack}
+  {f'<details class="evolved" open><summary>How it evolved ({len(p["timeline"])})</summary>{log}</details>' if log else ""}
+  {f'<p class="project-links">{links}</p>' if links else ""}
+  <hr>
+  <div class="md-body">{sectioned(render_md(p["body"]), words)}</div>
+  {sub_nav}
+  <hr>
+  <h2 class="small-h">Related</h2>
+  <ul class="related">{"".join(mini_card(q) for q in rel)}</ul>
+</article>'''
+    write(f"/{p['slug']}/", shell(site, title=p["title"], desc=p.get("summary"), body=body,
+                                  path=f"/{p['slug']}/", body_class="project-page", og_type="article",
+                                  crumb=p.get("short_title", p["title"])))
+
+    for s in p["subpages"]:
+        sbody = (f'<article class="project"><p class="crumbs"><a href="/{p["slug"]}/">← {esc(p["title"])}</a></p>'
+                 f'<h1>{esc(s.get("title", s["slug"]))}</h1><p class="project-summary">{esc(s.get("summary", ""))}</p>'
+                 f'<hr><div class="md-body">{render_md(s["body"])}</div></article>')
+        write(f"/{p['slug']}/{s['slug']}.html", shell(
+            site, title=s.get("title", s["slug"]), desc=s.get("summary"), body=sbody,
+            path=f"/{p['slug']}/{s['slug']}.html", body_class="project-page", crumb=p.get("short_title", p["title"])))
+    copy_images(p)
+
+
+def copy_images(item):
+    src = item["dir"] / "images"
+    if src.exists():
+        shutil.copytree(src, OUT / item["slug"] / "images", dirs_exist_ok=True)
+    for f in item["dir"].iterdir():   # loose downloadable folders (e.g. firmware/)
+        if f.is_dir() and f.name != "images":
+            shutil.copytree(f, OUT / item["slug"] / f.name, dirs_exist_ok=True)
+
+
+def build_page(site, pg):
+    body = (f'<article class="project"><h1>{esc(pg["title"])}</h1>'
+            + (f'<p class="project-summary">{esc(pg["summary"])}</p>' if pg.get("summary") else "")
+            + f'<hr><div class="md-body">{render_md(pg["body"])}</div></article>')
+    write(f"/{pg['slug']}/", shell(site, title=pg["title"], desc=pg.get("summary"),
+                                   body=body, path=f"/{pg['slug']}/", body_class="plain-page"))
+    copy_images(pg)
 
 
 # ── content discovery ──────────────────────────────────────────────────
@@ -233,297 +492,6 @@ def sort_projects(projects):
                                            tuple(-x for x in (p["_start"] or ((0, 0, 0), ""))[0])))
 
 
-# ── page shell ─────────────────────────────────────────────────────────
-
-NAV = [("/", "Timeline"), ("/projects/", "Projects"), ("/resume/", "Resume"), ("/about/", "About")]
-
-
-def shell(site, *, title, desc, body, path, body_class="", og_type="website"):
-    tpl = read(TEMPLATES / "base.html")
-    nav = "".join(
-        f'<a href="{h}"{" aria-current=\"page\"" if (path == h or (h != "/" and path.startswith(h))) else ""}>{l}</a>'
-        for h, l in NAV)
-    full_title = title if title == site["name"] else f"{title} · {site['name']}"
-    vals = {
-        "TITLE": esc(full_title),
-        "DESC": esc(desc or site["description"]),
-        "CANONICAL": esc(SITE_URL + path),
-        "OG_TYPE": og_type,
-        "NAV": nav,
-        "BODY": body,
-        "BODY_CLASS": body_class,
-        "YEAR": str(dt.date.today().year),
-        "FOOTER_LINKS": " ".join(f'<a href="{esc(l["url"])}">{esc(l["label"])}</a>' for l in site["links"]),
-        "BUILD_DATE": dt.date.today().isoformat(),
-    }
-    out = tpl
-    for k, v in vals.items():
-        out = out.replace("{{" + k + "}}", v)
-    return out
-
-
-def write(path: str, text: str):
-    p = OUT / path.lstrip("/")
-    if path.endswith("/"):
-        p = p / "index.html"
-    p.parent.mkdir(parents=True, exist_ok=True)
-    p.write_text(text, encoding="utf-8")
-
-
-# ── homepage: intro + featured + timeline ──────────────────────────────
-
-def timeline_events(projects):
-    events = []
-    for p in projects:
-        if p.get("hidden"):
-            continue
-        for ev in p["timeline"]:
-            d = parse_date(ev.get("date"))
-            if not d:
-                warn(f"{p['slug']}: timeline entry without a valid date: {ev}")
-                continue
-            events.append({"key": d[0], "label": d[1], "text": ev.get("text", ""), "p": p})
-    events.sort(key=lambda e: (e["key"], e["p"]["title"]), reverse=True)
-    return events
-
-
-def build_home(site, projects):
-    today = dt.date.today()
-    now_key = (today.year, today.month, today.day)
-    feats = [p for p in projects if p.get("featured")]
-    feats.sort(key=lambda p: p["featured"])
-
-    featured = "".join(f'''
-      <li>
-        <a class="feature" href="/{p["slug"]}/">
-          <span class="feature-head">{bars(p["status"])}<span class="feature-title">{esc(p.get("short_title", p["title"]))}</span></span>
-          <span class="feature-sum">{esc(p.get("summary", ""))}</span>
-        </a>
-      </li>''' for p in feats)
-
-    events = timeline_events(projects)
-
-    def grouped(evs, newest_first=True):
-        """[(month_key, [(project, [event, ...]), ...]), ...] — one row per project per month."""
-        months = {}
-        for e in evs:
-            months.setdefault(e["key"][:2], []).append(e)
-        out = []
-        # year-only entries ("2027") sort after that year's months going forward, before them going back
-        for mk in sorted(months, key=lambda k: (k[0], k[1] or (13 if not newest_first else 0)), reverse=newest_first):
-            per = {}
-            for e in sorted(months[mk], key=lambda e: e["key"]):
-                per.setdefault(e["p"]["slug"], []).append(e)
-            rows = sorted(per.values(), key=lambda es: max(x["key"] for x in es), reverse=True)
-            out.append((mk, [(es[0]["p"], es) for es in rows]))
-        return out
-
-    def row_html(mk, p, es, first, show_year):
-        label = ""
-        if first:
-            label = MONTHS[mk[1] - 1] if mk[1] else ("" if not show_year else str(mk[0]))
-            if show_year and mk[1]:
-                label = f"{MONTHS[mk[1] - 1]} <span>{mk[0]}</span>" if mk[0] != today.year else label
-        texts = [inline_md(e["text"]) for e in es]
-        body = (f"<p>{texts[0]}</p>" if len(texts) == 1
-                else "<ul>" + "".join(f"<li>{x}</li>" for x in texts) + "</ul>")
-        return f'''
-        <li class="event{" event-first" if first else ""}" {data_attrs(p, " ".join(e["text"] for e in es))}>
-          <time>{label}</time>
-          <div class="event-body">
-            <a class="event-project" href="/{p["slug"]}/">{bars(p["status"])}<span>{esc(p.get("short_title", p["title"]))}</span></a>
-            {body}
-          </div>
-        </li>'''
-
-    upcoming = [e for e in events if e["key"][:2] > now_key[:2]]
-    past = [e for e in events if e not in upcoming]
-    groups = []
-    if upcoming:
-        rows = "".join(row_html(mk, p, es, i == 0, True)
-                       for mk, prs in grouped(upcoming, newest_first=False) for i, (p, es) in enumerate(prs))
-        groups.append(f'<section class="year" data-group><h3>Coming up</h3><ol>{rows}</ol></section>')
-    by_year = {}
-    for mk, prs in grouped(past):
-        by_year.setdefault(mk[0], []).append((mk, prs))
-    for y in sorted(by_year, reverse=True):
-        rows = "".join(row_html(mk, p, es, i == 0, False) for mk, prs in by_year[y] for i, (p, es) in enumerate(prs))
-        groups.append(f'<section class="year" data-group><h3>{y}</h3><ol>{rows}</ol></section>')
-
-    intro = site["intro"]
-    links = "".join(f'<a href="{esc(l["url"])}">{esc(l["label"])}</a>' for l in site["hero_links"])
-    body = f'''
-<section class="hero">
-  <div class="hero-mark" aria-hidden="true">{read(STATIC / "brand" / "mark.svg")}</div>
-  <div class="hero-text">
-    <h1>{esc(site["person"])}</h1>
-    <p class="hero-lede">{inline_md(intro)}</p>
-    <p class="hero-links">{links}</p>
-  </div>
-</section>
-
-<section class="featured" aria-labelledby="featured-h">
-  <h2 id="featured-h">Start here</h2>
-  <ol class="feature-list">{featured}</ol>
-</section>
-
-<section class="timeline-wrap" aria-labelledby="timeline-h">
-  <div class="section-head">
-    <h2 id="timeline-h">Timeline</h2>
-    <p>What I built and when, newest first. The bars next to each project show its status.</p>
-  </div>
-  <div class="timeline-grid">
-    <div class="timeline" data-list>{"".join(groups)}</div>
-    <aside class="timeline-filters">{filter_bar(projects, with_tags=False)}</aside>
-  </div>
-</section>'''
-    write("/", shell(site, title=site["name"], desc=site["description"], body=body, path="/", body_class="home"))
-
-
-# ── projects index ────────────────────────────────────────────────────
-
-def build_projects_index(site, projects):
-    rows = []
-    for area, label in AREAS.items():
-        items = [p for p in projects if p["area"] == area and not p.get("hidden")]
-        if not items:
-            continue
-        lis = "".join(f'''
-      <li class="proj" {data_attrs(p)}>
-        <a href="/{p["slug"]}/">
-          <span class="proj-head">{bars(p["status"])}<span class="proj-title">{esc(p["title"])}</span>
-            <span class="proj-when">{esc(project_date_range(p))}</span></span>
-          <span class="proj-sum">{esc(p.get("summary", ""))}</span>
-        </a>
-        {tag_list(p["tags"])}
-      </li>''' for p in items)
-        rows.append(f'<section class="area" data-group><h2>{label}</h2><ul class="proj-list">{lis}</ul></section>')
-
-    legend = "".join(f'<li>{bars(k)}<span><strong>{l}</strong> {esc(d)}</span></li>'
-                     for k, (l, _, d) in STATUSES.items())
-    body = f'''
-<header class="page-head">
-  <h1>Projects</h1>
-  <p class="lede">Everything on the site, grouped by area. Filter by status or tag, or search.</p>
-  <ul class="legend">{legend}</ul>
-</header>
-{filter_bar([p for p in projects if not p.get("hidden")], with_tags=True)}
-<div data-list>{"".join(rows)}</div>'''
-    write("/projects/", shell(site, title="Projects", desc="Homelab, embedded and software projects by Dylan Zickus.",
-                              body=body, path="/projects/", body_class="projects"))
-
-
-# ── project pages ─────────────────────────────────────────────────────
-
-def project_aside(p):
-    facts = []
-    facts.append(f'<dt>Status</dt><dd>{status_pill(p["status"])}</dd>')
-    when = project_date_range(p)
-    if when:
-        facts.append(f"<dt>When</dt><dd>{esc(when)}</dd>")
-    if p.get("role"):
-        facts.append(f"<dt>Role</dt><dd>{esc(p['role'])}</dd>")
-    if p.get("stack"):
-        facts.append(f"<dt>Stack</dt><dd>{esc(', '.join(p['stack']))}</dd>")
-    if p.get("links"):
-        facts.append("<dt>Links</dt><dd>" + "<br>".join(
-            f'<a href="{esc(l["url"])}">{esc(l["label"])}</a>' for l in p["links"]) + "</dd>")
-    return f'<dl class="facts">{"".join(facts)}</dl>'
-
-
-def project_timeline(p):
-    if not p["timeline"]:
-        return ""
-    evs = sorted(p["timeline"], key=lambda e: (parse_date(e.get("date")) or ((0, 0, 0), ""))[0])
-    items = "".join(
-        f'<li><time>{esc((parse_date(e.get("date")) or (None, ""))[1])}</time><p>{inline_md(e.get("text", ""))}</p></li>'
-        for e in evs)
-    return f'<section class="ptl" aria-labelledby="ptl-h"><h2 id="ptl-h">How it evolved</h2><ol>{items}</ol></section>'
-
-
-def related(p, projects):
-    tags = {t.lower() for t in p["tags"]}
-    scored = []
-    for q in projects:
-        if q is p or q.get("hidden"):
-            continue
-        s = len(tags & {t.lower() for t in q["tags"]}) + (1 if q["area"] == p["area"] else 0)
-        if s:
-            scored.append((s, q))
-    scored.sort(key=lambda x: (-x[0], x[1]["title"]))
-    picks = [q for _, q in scored[:3]]
-    if not picks:
-        return ""
-    lis = "".join(f'<li><a href="/{q["slug"]}/">{bars(q["status"])}<span>{esc(q["title"])}</span></a></li>' for q in picks)
-    return f'<nav class="related" aria-label="Related projects"><h2>Related</h2><ul>{lis}</ul></nav>'
-
-
-def build_project(site, p, projects):
-    sub_nav = ""
-    if p["subpages"]:
-        sub_nav = ('<nav class="subpages" aria-label="Pages in this project"><h2>More on this project</h2><ul>'
-                   + "".join(f'<li><a href="/{p["slug"]}/{s["slug"]}.html">{esc(s.get("title", s["slug"]))}</a>'
-                             f'<span>{esc(s.get("summary", ""))}</span></li>' for s in p["subpages"])
-                   + "</ul></nav>")
-    body = f'''
-<article class="project">
-  <header class="project-head">
-    <p class="crumbs"><a href="/projects/">Projects</a> / {esc(AREAS[p["area"]])}</p>
-    <h1>{esc(p["title"])}</h1>
-    <p class="lede">{esc(p.get("summary", ""))}</p>
-    {tag_list(p["tags"])}
-  </header>
-  <div class="project-grid">
-    <aside>{project_aside(p)}</aside>
-    <div class="prose">
-      {render_md(p["body"])}
-      {sub_nav}
-      {project_timeline(p)}
-    </div>
-  </div>
-  {related(p, projects)}
-</article>'''
-    write(f"/{p['slug']}/", shell(site, title=p["title"], desc=p.get("summary"), body=body,
-                                  path=f"/{p['slug']}/", body_class="project-page", og_type="article"))
-
-    for s in p["subpages"]:
-        sbody = f'''
-<article class="project">
-  <header class="project-head">
-    <p class="crumbs"><a href="/projects/">Projects</a> / <a href="/{p["slug"]}/">{esc(p["title"])}</a></p>
-    <h1>{esc(s.get("title", s["slug"]))}</h1>
-    <p class="lede">{esc(s.get("summary", ""))}</p>
-  </header>
-  <div class="prose prose-solo">{render_md(s["body"])}</div>
-</article>'''
-        write(f"/{p['slug']}/{s['slug']}.html", shell(
-            site, title=s.get("title", s["slug"]), desc=s.get("summary"), body=sbody,
-            path=f"/{p['slug']}/{s['slug']}.html", body_class="project-page"))
-    copy_images(p)
-
-
-def copy_images(item):
-    src = item["dir"] / "images"
-    if src.exists():
-        dest = OUT / item["slug"] / "images"
-        shutil.copytree(src, dest, dirs_exist_ok=True)
-    for f in item["dir"].iterdir():   # loose downloadable files (e.g. firmware/)
-        if f.is_dir() and f.name not in ("images",):
-            shutil.copytree(f, OUT / item["slug"] / f.name, dirs_exist_ok=True)
-
-
-def build_page(site, pg):
-    body = f'''
-<article class="page">
-  <header class="page-head"><h1>{esc(pg["title"])}</h1>
-  {f'<p class="lede">{esc(pg["summary"])}</p>' if pg.get("summary") else ""}</header>
-  <div class="prose prose-solo">{render_md(pg["body"])}</div>
-</article>'''
-    write(f"/{pg['slug']}/", shell(site, title=pg["title"], desc=pg.get("summary") or pg.get("description"),
-                                   body=body, path=f"/{pg['slug']}/", body_class="plain-page"))
-    copy_images(pg)
-
-
 # ── resume ────────────────────────────────────────────────────────────
 
 def resume_html(r, focus=None, for_pdf=False):
@@ -587,6 +555,11 @@ def build_resume(site, r, make_pdf):
         f'{"" if k == "all" else " hidden"}>Download PDF{"" if k == "all" else " (" + FOCUSES[k].lower() + " first)"}</a>'
         for k in ["all", *FOCUSES])
     body = f'''
+<section class="page-top">
+  <h1>Resume</h1>
+  <p class="page-intro">Pick what to show first. The PDF matches your choice.</p>
+</section>
+<section class="resume-wrap">
 <div class="resume-tools">
   <fieldset class="focus-switch" data-focus-switch>
     <legend>Show first</legend>
@@ -596,7 +569,8 @@ def build_resume(site, r, make_pdf):
 </div>
 <article class="resume" data-resume>
 {resume_html(r)}
-</article>'''
+</article>
+</section>'''
     write("/resume/", shell(site, title="Resume", desc=f"Resume of {r['name']}.", body=body,
                             path="/resume/", body_class="resume-page"))
     if not make_pdf:
@@ -620,10 +594,60 @@ def build_resume(site, r, make_pdf):
 # ── extras ────────────────────────────────────────────────────────────
 
 def build_404(site):
-    body = '''<article class="page"><header class="page-head"><h1>Signal lost</h1>
-<p class="lede">That page doesn't exist, or it moved when the site was rebuilt.
-Try the <a href="/">timeline</a> or the <a href="/projects/">project list</a>.</p></header></article>'''
+    body = ('<section class="page-top"><h1>Signal lost</h1><p class="page-intro">That page doesn\'t exist, or it moved '
+            'when the site was rebuilt. Try the <a href="/">homepage</a> or the <a href="/projects/">project timeline</a>.'
+            '</p></section>')
     (OUT / "404.html").write_text(shell(site, title="Page not found", desc="", body=body, path="/404.html"), "utf-8")
+
+
+ROBOTS = """#
+#        _.-~~-._
+#     .-~  _..._  ~-.        spotty connection
+#         .-~ ~-.            dylanzickus.com
+#            (o)
+#
+# Hi, robot. Everything here is yours to read, except /signal-lost/.
+# Well-behaved crawlers never go there. Crawlers that ignore this file
+# end up in a maze of nonsense pages that only link to each other.
+#
+User-agent: *
+Disallow: /signal-lost/
+Allow: /
+
+Sitemap: {site}/sitemap.xml
+"""
+
+TRAP_WORDS = ("signal packet carrier mesh beacon relay tunnel subnet uplink router jitter latency "
+              "handshake checksum broadcast frequency antenna bandwidth static noise drift echo "
+              "lizard spotty modem dial-up squelch ping lost found buffer gateway").split()
+
+
+def build_trap(n_pages=48):
+    """A static honeypot: /signal-lost/ and a maze of pages that only link to each other.
+    It's disallowed in robots.txt and linked invisibly, so only rude crawlers find it."""
+    import hashlib
+    import random
+    rng = random.Random(42)
+    ids = [hashlib.sha1(str(i).encode()).hexdigest()[:10] for i in range(n_pages)]
+
+    def babble(k):
+        words = [rng.choice(TRAP_WORDS) for _ in range(k)]
+        return " ".join(words).capitalize() + "."
+
+    def page(title, links):
+        paras = "".join(f"<p>{babble(rng.randint(14, 30))} {babble(rng.randint(10, 22))}</p>" for _ in range(3))
+        nav = "".join(f'<li><a href="/signal-lost/{x}/">{babble(3)[:-1]}</a></li>' for x in links)
+        return f"""<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="robots" content="noindex, nofollow, noarchive"><title>{esc(title)}</title>
+<style>body{{background:#0f1117;color:#8f8a85;font:16px/1.6 monospace;max-width:40rem;margin:3rem auto;padding:0 1rem}}a{{color:#4fd1c5}}</style>
+</head><body><h1>{esc(title)}</h1>
+<p><em>If you're a person: you found the scraper trap. Hi! <a href="/">Head back home</a>.
+If you're a crawler that ignored robots.txt: enjoy the maze.</em></p>
+{paras}<ul>{nav}</ul></body></html>"""
+
+    write("/signal-lost/", page("Signal lost", rng.sample(ids, 6)))
+    for i in ids:
+        write(f"/signal-lost/{i}/", page(babble(4)[:-1], rng.sample(ids, 6)))
 
 
 def build_sitemap(paths):
@@ -631,7 +655,7 @@ def build_sitemap(paths):
     (OUT / "sitemap.xml").write_text(
         f'<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">{urls}</urlset>',
         "utf-8")
-    (OUT / "robots.txt").write_text(f"User-agent: *\nAllow: /\nSitemap: {SITE_URL}/sitemap.xml\n", "utf-8")
+    (OUT / "robots.txt").write_text(ROBOTS.format(site=SITE_URL), "utf-8")
 
 
 def main():
@@ -642,6 +666,9 @@ def main():
 
     print(f"Building {CONTENT} -> {OUT}")
     site = yaml.safe_load(read(CONTENT / "site.yaml"))
+    for colour, tags in (site.get("tag_colors") or {}).items():
+        for tg in tags:
+            TAG_COLORS[str(tg).lower()] = colour
     resume = yaml.safe_load(read(CONTENT / "resume.yaml"))
     projects, pages = discover()
     projects = sort_projects(projects)
@@ -669,6 +696,7 @@ def main():
         build_page(site, pg)
     build_resume(site, resume, make_pdf=not args.no_pdf)
     build_404(site)
+    build_trap()
     for old, new in (site.get("redirects") or {}).items():
         write(old, f'<!doctype html><meta charset="utf-8"><title>Moved</title>'
                    f'<link rel="canonical" href="{esc(SITE_URL + new)}">'

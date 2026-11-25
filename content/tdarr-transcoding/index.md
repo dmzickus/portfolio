@@ -1,31 +1,52 @@
 ---
 title: Remote Transcoding Pipeline
 short_title: Tdarr pipeline
-summary: A Tdarr transcoding node on a second machine, connected over Tailscale and using Intel Quick Sync, to normalize the media library for direct play. Retired once quality rules at download time made it unnecessary.
+summary: A Tdarr transcoding node on a second machine, connected over Tailscale and using Intel Quick Sync, to normalize
+  the media library for direct play. Retired once quality rules at download time made it unnecessary.
+icon: 🎞️
+highlights:
+- Quick Sync node two networks away
+- Debugged NFS, VA-API and OMV Samba
+- 'Retired: fixed at download time instead'
 status: retired
 area: homelab
 rank: 20
 started: 2026-07
 ended: 2026-11
 role: Solo
-stack: [Tdarr, Docker, ffmpeg, Intel Quick Sync (VA-API), Tailscale, Samba, OpenMediaVault]
-focus: [infra]
-tags: [Docker, ffmpeg, Linux, Networking, Tailscale, Hardware debugging, Self-hosting]
+stack:
+- Tdarr
+- Docker
+- ffmpeg
+- Intel Quick Sync (VA-API)
+- Tailscale
+- Samba
+- OpenMediaVault
+focus:
+- infra
+tags:
+- Docker
+- ffmpeg
+- Linux
+- Networking
+- Tailscale
+- Hardware debugging
+- Self-hosting
 timeline:
-  - date: 2026-07
-    text: Library audit shows 119 of 352 files (234 GB) in codecs that force the Pi to transcode.
-  - date: 2026-07
-    text: Tdarr server on the Pi; a node on an HP Z240 two networks away, connected over a direct Tailscale link (~15 MB/s).
-  - date: 2026-07
-    text: NFS export fails. Root cause is the Pi being out of memory, not the config.
-  - date: 2026-07
-    text: Built a custom node image with the Intel media driver; Quick Sync verified working inside the container.
-  - date: 2026-07
-    text: Tracked the Samba write failure to an OMV-generated read-only override on the share.
-  - date: 2026-11
-    text: Retired. Quality rules at download time do the same job, and the new server transcodes in hardware.
+- date: 2026-07
+  text: Library audit shows 119 of 352 files (234 GB) in codecs that force the Pi to transcode.
+- date: 2026-07
+  text: Tdarr server on the Pi; a node on an HP Z240 two networks away, connected over a direct Tailscale link (~15
+    MB/s).
+- date: 2026-07
+  text: NFS export fails. Root cause is the Pi being out of memory, not the config.
+- date: 2026-07
+  text: Built a custom node image with the Intel media driver; Quick Sync verified working inside the container.
+- date: 2026-07
+  text: Tracked the Samba write failure to an OMV-generated read-only override on the share.
+- date: 2026-11
+  text: Retired. Quality rules at download time do the same job, and the new server transcodes in hardware.
 ---
-
 The original media server was a Raspberry Pi 5, which can decode video but has no usable hardware encoder. Any file a client couldn't play directly meant the Pi transcoding in software, badly. The plan was to convert the library ahead of time into formats every client could play, using a machine that *could* encode in hardware.
 
 ## Setup

@@ -5,7 +5,7 @@ This repo is Dylan's personal site. Read README.md for the content model.
 ## Adding or updating a project
 
 - **Only add a project after Dylan approves it.** Not everything belongs on the site. Updating an existing page's status or timeline is fine whenever he mentions a change.
-- Start from `content/_template/index.md`. Reuse existing tags; run `grep -h "^tags:" content/*/index.md` to see them.
+- Start from `content/_template/index.md` (include `icon` and three short `highlights`). Reuse existing tags; run `grep -h "^tags:" content/*/index.md` to see them.
 - For an update, **append** a `timeline` entry (`date: YYYY-MM`, one sentence) and change `status` if it changed. Don't rewrite history.
 - Write plainly, in first person, like the existing pages: what it is, how it works, what went wrong, what's next. Short paragraphs, no hype.
 - Facts must come from Dylan or the work itself. Mark uncertain dates as year-only rather than guessing a month.
