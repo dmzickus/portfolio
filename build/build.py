@@ -128,6 +128,8 @@ def build_nav_links(sections, from_dir: Path, active_slug: str) -> str:
     home_href = relhref(from_dir, OUT / "index.html")
     items.append(f'    <li><a href="{home_href}"{home_class}>Home</a></li>')
     for sec in sections:
+        if sec["fm"].get("hidden"):
+            continue
         label = esc(sec["fm"].get("nav_label", sec["fm"]["title"]))
         href = relhref(from_dir, OUT / sec["slug"] / "index.html")
         active = " class=\"active\"" if sec["slug"] == active_slug else ""
@@ -263,7 +265,7 @@ def build_homepage(sections, home_cfg):
 
     collection_cards = "\n".join(
         collection_card(relhref(OUT, OUT / s["slug"] / "index.html"), s["fm"])
-        for s in sections
+        for s in sections if not s["fm"].get("hidden")
     )
 
     other_builds = home_cfg.get("other_builds", [])
