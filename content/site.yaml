@@ -1,0 +1,39 @@
+# Site-wide settings. Projects live in content/<slug>/index.md.
+name: Spotty Connection
+person: Dylan Zickus
+description: >-
+  Dylan Zickus builds homelabs, smart-home hardware and the software that keeps them
+  running. CS at WPI, looking for a Summer 2027 software or systems internship.
+
+# Homepage intro (Markdown allowed)
+intro: >-
+  I'm a computer science student at WPI. I run a homelab, build smart-home hardware, and
+  write the software that keeps both running. I'm looking for a **Summer 2027 software or
+  systems internship** near Boston or Worcester.
+
+hero_links:
+  - { label: Resume, url: /resume/ }
+  - { label: GitHub, url: "https://github.com/dmzickus" }
+  - { label: LinkedIn, url: "https://www.linkedin.com/in/dylanzickus" }
+  - { label: dmzickus@wpi.edu, url: "mailto:dmzickus@wpi.edu" }
+
+footer_links: []
+links:
+  - { label: GitHub, url: "https://github.com/dmzickus" }
+  - { label: LinkedIn, url: "https://www.linkedin.com/in/dylanzickus" }
+  - { label: Email, url: "mailto:dmzickus@wpi.edu" }
+
+# "Start here" on the homepage, in this order (project folder names)
+featured:
+  - ops-agent
+  - homelab
+  - cs3733-document-platform
+
+# Old URLs that moved. Each gets a tiny page that forwards to the new one.
+redirects:
+  /smart-home-projects/: /home-assistant/
+  /media-stack/arr-stack.html: /media-stack/
+  /media-stack/jellyfin.html: /media-stack/
+  /media-stack/infrastructure.html: /homelab/
+  /media-stack/vpn-routing.html: /media-stack/
+  /media-stack/tdarr.html: /tdarr-transcoding/

@@ -1,14 +1,10 @@
 ---
+# Kept for the rclone Google OAuth app. Built at /terms/ but not linked anywhere.
 title: Terms of Service
-nav_label: Terms
-icon: 📄
-icon_color: ''
-hidden: true          # built at /terms/ but kept out of the nav and homepage
-order: 999
-description: Terms for my personal tools and the "rclone" Google OAuth app.
-tags: []
+type: page
+hidden: true
+summary: Terms for my personal tools and the "rclone" Google OAuth app.
 ---
-
 *Last updated: November 25, 2026*
 
 These terms cover the personal Google OAuth app **"rclone"** registered by Dylan Zickus and any small tools on dylanzickus.com.

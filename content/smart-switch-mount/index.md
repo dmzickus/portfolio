@@ -1,18 +1,36 @@
 ---
-title: 3D-Printed Switch Mount
-nav_label: Switch Mount
-icon: 🔄
-icon_color: ''
-badge: 3-stage iteration
-order: 50
-description: Custom enclosure over the wall switch housing an ESP32 and rotary encoder. Sends relative commands to HA instead of tracking absolute state — key architectural lesson.
+title: Light Switch Knob
+short_title: Light switch knob
+status: live
+area: embedded
+summary: A 3D-printed mount over the wall switch with an ESP32 and rotary encoder. It sends relative steps instead
+  of absolute levels, so it never fights Home Assistant over state.
 tags:
 - ESP32
 - Rotary encoder
-- 3D print
+- 3D printing
 - MQTT
+- Home Assistant
+- Arduino C++
+started: '2025'
+focus:
+- embedded
+stack:
+- ESP32
+- Rotary encoder
+- DHT11
+- MQTT
+- Home Assistant
+rank: 10
+timeline:
+- date: '2025'
+  text: 'First mount: encoder tracks absolute brightness and drifts out of sync with the bulbs.'
+- date: '2025'
+  text: Switched to relative commands; Home Assistant stays the source of truth.
+- date: 2026-11
+  text: Home Assistant side moved to queued step automations; adding OTA updates over MQTT so firmware changes don't
+    need a USB cable.
 ---
-
 # 3D-Printed Smart Switch Mount — ESP32 + MQTT + Rotary Encoder
 
 ## Overview

@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{TITLE}}</title>
+<meta name="description" content="{{DESC}}">
+<link rel="canonical" href="{{CANONICAL}}">
+<meta property="og:type" content="{{OG_TYPE}}">
+<meta property="og:title" content="{{TITLE}}">
+<meta property="og:description" content="{{DESC}}">
+<meta property="og:url" content="{{CANONICAL}}">
+<meta property="og:image" content="https://dylanzickus.com/assets/brand/og-card.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#1b2440">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/assets/brand/apple-touch-icon.png">
+<link rel="preload" href="/assets/fonts/schibsted.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/assets/style.css">
+<script defer src="/assets/site.js"></script>
+</head>
+<body class="{{BODY_CLASS}}">
+<a class="skip" href="#main">Skip to content</a>
+<header class="site-header">
+  <a class="brand" href="/" aria-label="Spotty Connection, home">
+    <img src="/assets/brand/logo-secondary.svg" alt="" width="220" height="37">
+  </a>
+  <nav class="site-nav" aria-label="Main">{{NAV}}</nav>
+</header>
+<main id="main">
+{{BODY}}
+</main>
+<footer class="site-footer">
+  <p>Dylan Zickus, Worcester MA. {{FOOTER_LINKS}}</p>
+  <p class="quiet">Built from Markdown with a small Python script. Last built {{BUILD_DATE}}.</p>
+</footer>
+</body>
+</html>

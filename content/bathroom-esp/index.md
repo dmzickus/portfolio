@@ -1,18 +1,35 @@
 ---
 title: Bathroom Automation Controller
-nav_label: Bathroom ESP
-icon: 🚿
-icon_color: ''
-badge: 5-stage iteration
-order: 20
-description: ESP8266 handling a 3-state occupancy machine from a reed switch and DHT11 — door-triggered lighting plus shower detection driving a servo fan via Home Assistant.
+short_title: Bathroom controller
+status: retired
+area: embedded
+summary: A reed switch and a DHT11 feed a three-state occupancy machine that runs the bathroom light, with shower
+  detection for the fan.
 tags:
 - ESP8266
-- Reed switch
-- DHT11
 - State machine
+- DHT11
+- MQTT
+- Home Assistant
+- Arduino C++
+started: '2025'
+focus:
+- embedded
+stack:
+- ESP8266
+- DHT11
+- Reed switch
+- MQTT
+- Home Assistant
+rank: 25
+timeline:
+- date: '2025'
+  text: Door sensor drives the light; first version of the occupancy state machine.
+- date: '2025'
+  text: Humidity-based shower detection added; five automations cover every state transition.
+- date: 2026-11
+  text: Taken offline. Will come back as a node in the ESP-NOW revamp.
 ---
-
 # Bathroom ESP8266 Controller — DHT11 + Reed Switch + MQTT + Home Assistant
 
 ## Overview
@@ -30,7 +47,7 @@ A servo-driven exhaust fan is hardware-complete and pending firmware. A VOC sens
 - **Door sensor:** Magnetic reed switch on `D3` (GPIO0), wired to GND with `INPUT_PULLUP`
 - **Light control:** Physical smart flipper on the wall switch — actuates multiple bulbs via Home Assistant
 - **Fan control (hardware-ready):** Servo motor in a custom 3D-printed wall switch cover — CAD complete, firmware pending
-- **MQTT broker:** Mosquitto on `192.168.1.144:1883`
+- **MQTT broker:** Mosquitto on the Home Assistant box (port 1883)
 
 ### Wiring
 

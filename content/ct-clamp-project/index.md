@@ -1,18 +1,31 @@
 ---
 title: CT Clamp Appliance Monitor
-nav_label: CT Clamp
-icon: ⚡
-icon_color: yellow
-badge: In progress
-order: 70
-description: Non-invasive current sensing for washer/dryer/dishwasher done notifications. Validated circuit on oscilloscope; blocked by ESP ADC noise — pivoting to Arduino ADC.
+short_title: Appliance monitor
+status: dormant
+area: embedded
+summary: Non-invasive current sensing to send a notification when the washer, dryer or dishwasher finishes. Circuit
+  verified on an oscilloscope; stalled on ESP ADC noise.
 tags:
-- CT clamp
 - ADC
+- Oscilloscope
+- Arduino C++
+- Hardware debugging
+- ESP8266
+started: '2025'
+focus:
+- embedded
+stack:
+- CT clamp
+- ESP8266
 - Arduino
 - Oscilloscope
+rank: 30
+timeline:
+- date: '2025'
+  text: Burden-resistor circuit designed and checked on an oscilloscope.
+- date: '2025'
+  text: 'Readings unusable: traced to noise in the ESP8266''s ADC. Plan is an external ADC or an Arduino front end.'
 ---
-
 # CT Clamp Appliance Monitor — Smart Home Notifications
 
 ## Overview

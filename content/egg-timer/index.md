@@ -1,18 +1,32 @@
 ---
-title: OLED Egg Timer + HA Companion
-nav_label: Egg Timer
-icon: ⏱️
-icon_color: ''
-badge: 2-phase build
-order: 60
-description: Standalone timer with animated egg character on SSD1306 OLED. Full HA dashboard with per-roommate notification routing. Hardware and firmware done; never merged or shipped.
+title: OLED Egg Timer
+short_title: Egg timer
+status: dormant
+area: embedded
+summary: A standalone kitchen timer with an animated egg on an SSD1306 OLED, plus a Home Assistant dashboard that
+  notifies whoever started it.
 tags:
 - ESP8266
+- OLED
+- MQTT
+- Home Assistant
+- Arduino C++
+started: '2025'
+focus:
+- embedded
+stack:
+- ESP8266
 - SSD1306
-- Animations
-- HA dashboard
+- Rotary encoder
+- MQTT
+- Home Assistant
+rank: 40
+timeline:
+- date: '2025'
+  text: LCD prototype nails the timer logic and controls.
+- date: '2025'
+  text: OLED version with an animated egg and per-roommate notifications. The two firmwares were never merged.
 ---
-
 # Egg Timer — ESP8266 + OLED + MQTT + Home Assistant
 
 ## Overview
@@ -96,7 +110,7 @@ A custom Lovelace card with full timer control:
 - **Timer State** — `RUNNING` / `STOPPED` / `RESET`
 - **Start / Stop / Reset** buttons
 - **+30s / −30s** buttons
-- **Per-roommate notification toggles** — Dylan, Cole, Gabe; tap to opt in before starting
+- **Per-roommate notification toggles** — one per roommate; tap to opt in before starting
 
 ### Underlying Entities
 
@@ -105,7 +119,7 @@ A custom Lovelace card with full timer control:
 | `input_number.timer_remaining` | Seconds remaining, decremented every second by automation |
 | `input_number.timer_total` | Original duration (for progress %) |
 | `input_text.timer_state` | `RUNNING` / `STOPPED` / `RESET` |
-| `input_boolean.timer_dylan/cole/gabe` | Notification opt-in per roommate |
+| `input_boolean.timer_<name>` | Notification opt-in per roommate |
 | `input_button.timer_start/stop/reset/add_30s/sub_30s` | Dashboard button triggers |
 
 ### Automations
@@ -127,7 +141,7 @@ Every action has two paths — one triggered by the dashboard button, one by MQT
 ```
 egg_timer/command    ← HA → device  (START, STOP, RESET, ADD30, SUB30)
 egg_timer/state      ← device → HA  (same payload set)
-egg_timer/notification ← device → HA (Dylan / Cole / Gabe — toggles opt-in boolean)
+egg_timer/notification ← device → HA (per-roommate opt-in toggles)
 ```
 
 The physical device was meant to publish its own encoder/button actions to `egg_timer/state` so HA mirrors the local state in real time. This was never wired up.

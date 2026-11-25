@@ -1,0 +1,94 @@
+# Resume — rendered at /resume/ and as PDFs (one per focus).
+# Every item can carry `focus: [infra, embedded, fullstack]`; the focus switcher
+# moves matching items to the top. Keep the PDF to one page (the build warns if not).
+name: Dylan Zickus
+pdf_name: Dylan_Zickus_Resume
+
+contact:
+  location: Worcester, MA
+  email: dmzickus@wpi.edu
+  links:
+    - { label: dylanzickus.com, url: "https://dylanzickus.com" }
+    - { label: github.com/dmzickus, url: "https://github.com/dmzickus" }
+    - { label: linkedin.com/in/dylanzickus, url: "https://www.linkedin.com/in/dylanzickus" }
+
+education:
+  school: Worcester Polytechnic Institute (WPI)
+  when: Expected May 2028
+  degree: B.S. Computer Science
+  detail: GPA 3.77, Dean's List
+  coursework: >-
+    Coursework: Operating Systems, Systems Programming, Machine Organization, Algorithms,
+    Software Engineering, Machine Learning, Databases
+
+skills:
+  - label: Languages
+    items: [Python, TypeScript, Java, C, C++, Bash, x86-64 Assembly]
+    focus: [infra, embedded, fullstack]
+  - label: Infrastructure
+    items: [Linux, Docker, Proxmox, OPNsense, Tailscale, WireGuard, Cloudflare Tunnel, AWS, Git, MCP]
+    focus: [infra]
+  - label: Web & data
+    items: [React, Node / Express, Prisma, PostgreSQL + pgvector, MySQL, Auth0, REST APIs]
+    focus: [fullstack]
+  - label: Embedded
+    items: [ESP32 / ESP8266, Arduino, Raspberry Pi, MQTT, Zigbee, Home Assistant, KiCad, 3D printing]
+    focus: [embedded]
+
+projects:
+  - name: Homelab ops agent
+    url: https://dylanzickus.com/ops-agent/
+    when: Nov 2026 – present
+    sub: Python, MCP, Docker, Cloudflare Access
+    focus: [infra]
+    bullets:
+      - Built an MCP server that lets Claude monitor and repair a Docker host through a read-only view and typed, allowlisted actions run by a separate root process.
+      - Runs a daily health check that fixes routine problems on its own and emails a report of anything that needs a decision, with autonomy limits set per action.
+  - name: Content management platform (CS3733)
+    url: https://cs3733.stomberg.us/
+    when: Mar – May 2026
+    sub: Team lead; React, TypeScript, PostgreSQL, AWS
+    focus: [fullstack]
+    bullets:
+      - Led a 10-person Agile team building a document management system for The Hanover Insurance Group.
+      - Built semantic search across four entity types using pgvector embeddings of file text, metadata and OCR output, served by a locally run Python ML service.
+      - Built the Docker images and owned the AWS deployment; wired up the Prisma ORM layer and split shared data access from the Express API.
+  - name: Self-hosted homelab
+    url: https://dylanzickus.com/homelab/
+    when: Apr 2026 – present
+    sub: Proxmox, Linux, Docker, OPNsense, Tailscale
+    focus: [infra]
+    bullets:
+      - Migrated a Raspberry Pi media server to a Proxmox VM with Quick Sync passthrough and a pooled 4 TB array, now running 20+ containers for media, music and photos.
+      - Segmented the network into five VLANs behind OPNsense; remote access via Tailscale and Cloudflare Tunnel, with encrypted restic backups.
+  - name: Embedded builds and smart home
+    url: https://dylanzickus.com/esp-builds/
+    when: Aug 2024 – present
+    sub: ESP32 / ESP8266, C++, MQTT, Home Assistant
+    focus: [embedded]
+    bullets:
+      - Wrote C++ firmware for more than ten ESP devices on a self-hosted MQTT broker, including an alarm keypad that reads seven keys through one ADC pin using a resistor ladder.
+      - Debugged a current-sensing appliance monitor on an oscilloscope and traced the fault to ESP ADC noise.
+      - Run Home Assistant across Zigbee, MQTT and Matter; built a light-effects engine that restores each room afterwards.
+  - name: AMSA Eagle Eye
+    when: 2023 – 2024
+    sub: Full-stack developer, team of eight
+    focus: [fullstack, embedded]
+    bullets:
+      - Built an RFID class-attendance system with a PHP/SQL back end, Arduino reader firmware in C, and a Swift app, hosted on AWS with MySQL.
+
+experience: []
+
+leadership:
+  - name: Lifeguard, Town of Marlborough and Wayside Inn
+    when: Summer 2026
+    line: "Guarded five facilities across two concurrent jobs; ran opening, closing and water-chemistry logs."
+  - name: Eagle Scout, Troop 41
+    when: 2011 – present
+    line: "Senior Patrol Leader; Order of the Arrow. Eagle project: a 70-foot boardwalk through conservation land."
+  - name: WPI Combat Robotics
+    when: Aug 2024 – present
+    line: "Design, wire and program a 3D-printed combat robot with a five-person team."
+  - name: Athletics
+    when: ""
+    line: "WPI Men's Crew rower and mentor (2024–26); high school cross country and track captain."

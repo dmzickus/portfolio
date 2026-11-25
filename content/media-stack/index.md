@@ -1,113 +1,66 @@
 ---
-title: Self-Hosted Media Stack
-nav_label: Media Stack
-icon: 🖥️
-icon_color: ''
-badge: ''
-order: 80
-description: A full homelab media pipeline on a Raspberry Pi 5 — Jellyfin, automated library management via the arr stack, VPN-tunneled downloads, and cross-network hardware transcoding with Intel Quick Sync.
-tags:
-- Jellyfin
-- Docker
-- WireGuard
-- Raspberry Pi
-- Tdarr
-pills:
-- Raspberry Pi 5
-- Docker
-- Jellyfin
-- WireGuard / AirVPN
-- Intel QSV
-- Tailscale
-- OpenMediaVault
+title: Self-Hosted Media Server
+short_title: Media server
+summary: Jellyfin for the apartment and family, with request-driven library automation, a 2 TB size budget, hardware transcoding, and a nightly "preshow" of vintage trailers before movies.
+status: live
+area: homelab
+rank: 3
+started: 2026-04
+role: Solo; used daily by roommates, friends and family
+stack: [Jellyfin, Docker, Sonarr, Radarr, Seerr, Maintainerr, WireGuard (Gluetun), Intel Quick Sync, ffmpeg]
+focus: [infra]
+tags: [Docker, Linux, Jellyfin, ffmpeg, WireGuard, Networking, Self-hosting, Automation, Bash]
+timeline:
+  - date: 2026-04
+    text: Jellyfin installed natively on a Raspberry Pi 5 next to OpenMediaVault.
+  - date: 2026-05
+    text: Request-driven library management with Seerr, Sonarr and Radarr. Download clients isolated inside a WireGuard container's network namespace.
+  - date: 2026-07
+    text: Codec audit of 352 files (740 GB). Remote transcoding node built over Tailscale. See [Tdarr pipeline](/tdarr-transcoding/).
+  - date: 2026-07
+    text: Upload-speed analysis from 580 daily speed tests sets an 8 Mbps per-stream cap, enough for three remote streams without transcoding.
+  - date: 2026-09
+    text: Migrated to a Proxmox VM. Jellyfin containerized with Quick Sync passthrough; watch history and app data carried over.
+  - date: 2026-11
+    text: Quality rules switched to HEVC with 5.1 audio now that the server can transcode in hardware. Space became the constraint.
+  - date: 2026-11
+    text: A 2 TB budget, enforced by Maintainerr cleanup rules with a grace period. Anything someone watched, requested or favorited is kept.
+  - date: 2026-11
+    text: Nightly generated "preshows" for Jellyfin cinema mode, with local trailers and vintage theater bumpers.
 ---
 
-# Self-Hosted Home Media Stack
+The media server replaced streaming subscriptions for the apartment and a few family members. People request a movie or show from a web page, it shows up in Jellyfin a while later, and it plays on the living room Roku, phones, or laptops anywhere.
 
-> A fully self-hosted media server, automated library management pipeline, and transcoding infrastructure — built on a Raspberry Pi 5, an old workstation, and a lot of troubleshooting.
+## The pieces
 
-## What is this?
+- **Jellyfin** serves the library. It's containerized on the [homelab](/homelab/)'s media VM, with Intel Quick Sync passed through for hardware transcoding.
+- **Seerr** is the front door: anyone with an account can request something.
+- **Sonarr and Radarr** manage the library. They pick a release that matches the quality rules, rename and file it, and keep the library tidy. Downloads and imports use hardlinks on one filesystem, so a finished download doesn't take up space twice.
+- **The download clients run inside a WireGuard container's network namespace.** They have no network path except the tunnel, so if the tunnel drops, they lose connectivity instead of leaking onto the home connection.
+- **Maintainerr** enforces the size budget (below).
+- **Jellystat** keeps watch history and statistics, which feed the cleanup rules.
 
-This is a writeup of a project I've been building and iterating on throughout 2026: a home media stack that replaces streaming services with a fully self-hosted setup. No subscriptions, no content disappearing, no algorithmic recommendations — just a local library I control, available on any device anywhere.
+## Rules instead of babysitting
 
-The stack handles everything from **finding and downloading media**, to **organizing and cataloging it**, to **streaming it to any device** with near-zero transcoding. There's also an automated transcoding pipeline that normalizes the library's codec mix for maximum compatibility.
+Most of the work on this project has been turning "I'll keep an eye on it" into rules:
 
-It's the kind of project that started simple and kept growing. What began as "just run Jellyfin on a Pi" turned into a multi-machine system with VPN-tunneled downloads, cross-network hardware transcoding, and more `docker-compose` files than I'd like to admit.
+- **Quality profiles decide what gets downloaded.** Custom-format scores prefer 5.1 audio and efficient codecs and cap size at 1080p Blu-ray, so files arrive already playable and the right size. This is what made the [transcoding pipeline](/tdarr-transcoding/) unnecessary.
+- **A 2 TB budget for movies and TV.** Cleanup rules flag titles nobody has watched, requested, or favorited. They show up in a "leaving soon" list with a grace period before anything is deleted. A short list of staples is always kept. Deletions also unmonitor the title and clear the request, so nothing is downloaded again by accident.
+- **Nightly jobs** import stuck downloads, clear orphaned partial downloads, and keep subtitles and metadata in order. They log to one folder that the [ops agent](/ops-agent/) reads every morning.
 
----
+## The preshow
 
-## Architecture Overview
+The Roku app plays only the first cinema-mode intro before a movie, so the normal "a few trailers, then the movie" setup didn't work. A nightly job instead builds ten merged preshow clips. Each one has an upcoming-release trailer, a trailer for something already in the library, and a vintage theater bumper, with rating cards in between. There are seasonal variants, and the Christmas one runs longer than it should. New bumpers only go into rotation after I approve them.
 
-```
-┌─────────────────────────────────────────────────┐
-│                   nas-pi (Pi 5)                  │
-│                                                  │
-│  Jellyfin (native)   ←── media library           │
-│  Radarr / Sonarr / Lidarr / Bazarr              │
-│  Prowlarr (indexer proxy)                        │
-│  qBittorrent ──────────── Gluetun (AirVPN)      │
-│  Tdarr Server (no local workers)                 │
-│  Homarr · Jellystat · Beszel · Uptime-Kuma      │
-└──────────────┬──────────────────────────────────┘
-               │ Tailscale (Samba/SMB)
-               │
-┌──────────────▼──────────────────────────────────┐
-│                  z240 (HP Workstation)            │
-│                                                  │
-│  Tdarr Node (Docker/Podman)                      │
-│  Intel QSV hardware encode (HD P530)             │
-└─────────────────────────────────────────────────┘
-```
+## Numbers
 
-All download traffic routes through a WireGuard VPN tunnel (AirVPN via Gluetun). The arr stack containers share the VPN container's network namespace, so nothing leaks if the tunnel drops. Jellyfin streams directly to clients on the local network or via Tailscale from anywhere.
+| | |
+|---|---|
+| Accounts | 6 (roommates, friends, family) |
+| Library budget | 2 TB movies + TV |
+| Remote stream cap | 8 Mbps each, based on measured upload (median 40 Mbps) |
+| Transcoding | Intel UHD 630 (Quick Sync), H.264 / HEVC / VP9 |
 
-The transcoding node runs on a separate machine connected over Tailscale, using Intel Quick Sync for hardware-accelerated H.264 encoding. Files travel over SMB-on-Tailscale between machines.
+## Earlier versions
 
----
-
-## The Stack at a Glance
-
-| Component | Role | Page |
-|-----------|------|------|
-| nas-pi (Pi 5 + OMV) | NAS, host for everything | [Infrastructure](./infrastructure.md) |
-| Jellyfin | Media server, streaming | [Jellyfin](./jellyfin.md) |
-| Radarr / Sonarr / Lidarr / Bazarr | Automated library management | [The arr Stack](./arr-stack.md) |
-| Prowlarr + qBittorrent + Gluetun | Indexing, downloading, VPN routing | [VPN & Downloading](./vpn-routing.md) |
-| Tdarr + z240 QSV node | Automated transcoding pipeline | [Tdarr Pipeline](./tdarr.md) |
-| Homarr, Beszel, Jellystat, Uptime-Kuma | Dashboard & monitoring | [Infrastructure](./infrastructure.md) |
-
----
-
-## Timeline
-
-### Q1 2026 — Foundation
-Set up the Raspberry Pi 5 as a NAS running OpenMediaVault. Got Jellyfin running natively (not containerized — more on why). Figured out storage layout, permissions, and remote access via Tailscale. This phase was mostly infrastructure groundwork: getting a stable, remotely accessible machine that could serve media reliably.
-
-### Q2 2026 — Automation
-Deployed the full arr stack: Radarr, Sonarr, Lidarr, Bazarr, Prowlarr, and qBittorrent — all containerized and routed through a Gluetun VPN tunnel. Spent significant time on hardlink configuration (critical for keeping a clean library without duplicating storage), quality profiles, and custom format scoring in Radarr/Sonarr. Also dealt with a security incident involving disguised malware in torrent files — documented in the arr stack page.
-
-### Summer 2026 — Transcoding & Monitoring
-Built the Tdarr transcoding pipeline to normalize the library to H.264 for direct play everywhere. This turned into a deep rabbit hole: NFS failures on a memory-constrained Pi, a custom Docker image to get Intel QSV working, cross-network SMB mounts over Tailscale, and a lot of `vainfo` output. Also set up the full monitoring stack (Beszel, Jellystat, Uptime-Kuma) and a Homarr dashboard to tie everything together.
-
----
-
-## Why Self-Host?
-
-Honestly, a mix of practical and philosophical reasons:
-
-- **Control** — content I've downloaded doesn't disappear when a licensing deal expires
-- **Compatibility** — Jellyfin runs on everything: browsers, phones, TVs, game consoles
-- **Cost** — after the initial hardware, it's effectively free
-- **Learning** — this project has touched Linux administration, Docker networking, VPN configuration, codec pipelines, and cross-machine file sharing. It's been one of the best practical learning experiences I've had
-
-The tradeoff is real though: you become your own ops team. When something breaks at 11pm, that's on you to fix.
-
----
-
-## Pages in This Section
-
-- [Infrastructure](./infrastructure.md) — nas-pi, OpenMediaVault, hardware, and monitoring
-- [Jellyfin](./jellyfin.md) — media server setup, native install, and stability debugging
-- [The arr Stack](./arr-stack.md) — automated library management and quality control
-- [VPN & Downloading](./vpn-routing.md) — Gluetun, AirVPN, WireGuard, and download routing
-- [Tdarr Pipeline](./tdarr.md) — automated transcoding to H.264 with Intel Quick Sync
+The first version ran on the Pi 5 with Jellyfin installed natively. It worked, but the Pi has no usable hardware encoder and was out of memory. The [Tdarr pipeline](/tdarr-transcoding/) was the workaround, and the [homelab](/homelab/) migration was the real fix.

@@ -1,18 +1,33 @@
 ---
 title: Living Room LED Strip
-nav_label: LED Strip
-icon: 💡
-icon_color: green
-badge: 3-stage iteration
-order: 30
-description: Desoldered the IR receiver off a salvaged LED strip and wired it to an ESP for full RGB MQTT control. Per-channel color correction to fix hardware imbalance.
+short_title: Living room LED
+status: live
+area: embedded
+summary: A salvaged LED strip with its IR receiver desoldered and an ESP8266 driving the channels directly, with
+  per-channel color correction.
 tags:
 - ESP8266
 - PWM
 - MQTT
-- Color correction
+- Home Assistant
+- Arduino C++
+started: '2025'
+focus:
+- embedded
+stack:
+- ESP8266
+- PWM
+- MQTT
+- Home Assistant
+rank: 15
+timeline:
+- date: '2025'
+  text: 'Proof of concept: ESP8266 GPIO driving a common-anode strip with inverted PWM.'
+- date: '2025'
+  text: MQTT light entity in Home Assistant; green and blue scaled down to balance the weak red channel.
+- date: 2026-11
+  text: Exposed to Alexa and the light-effects engine. First candidate for the ESPHome/ESP-NOW rewrite.
 ---
-
 # Living Room LED Strip — ESP8266 + MQTT + Home Assistant
 
 ## Overview

@@ -1,18 +1,29 @@
 ---
 title: Overengineered RTC Clock
-nav_label: Clock
-icon: 🕐
-icon_color: green
-badge: 4-stage build
-order: 90
-description: Arduino Mega + DS3231 RTC in a custom 3D-printed purple enclosure. Brute-force calendar math including DST. Featured a scrapped side-scrolling game ("Spike and Dude").
+short_title: RTC clock
+status: retired
+area: embedded
+summary: Arduino Mega and a DS3231 in a 3D-printed enclosure, with calendar math (DST included) written from scratch
+  and a scrapped side-scroller.
 tags:
+- Arduino C++
+- 3D printing
+- Memory limits
+started: '2024'
+focus:
+- embedded
+stack:
 - Arduino Mega
 - DS3231
 - 20×4 LCD
-- 3D print
+- 3D printing
+rank: 50
+timeline:
+- date: '2024'
+  text: Brute-force date and DST math without libraries.
+- date: '2024'
+  text: Ran into the Mega's memory limits; trimmed features and printed the enclosure.
 ---
-
 # Overengineered RTC Clock — Arduino Mega + Custom Hardware
 
 ## Overview

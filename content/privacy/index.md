@@ -1,14 +1,10 @@
 ---
+# Kept for the rclone Google OAuth app. Built at /privacy/ but not linked anywhere.
 title: Privacy Policy
-nav_label: Privacy
-icon: 🔒
-icon_color: ''
-hidden: true          # built at /privacy/ but kept out of the nav and homepage
-order: 999
-description: How my personal tools and the "rclone" Google OAuth app handle data.
-tags: []
+type: page
+hidden: true
+summary: How my personal tools and the "rclone" Google OAuth app handle data.
 ---
-
 *Last updated: November 25, 2026*
 
 This policy covers the personal Google OAuth app **"rclone"** registered by Dylan Zickus and any small tools on dylanzickus.com. These apps are for my own personal and household use only. They are not offered to the public.
