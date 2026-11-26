@@ -639,7 +639,7 @@ def build_trap(n_pages=48):
         nav = "".join(f'<li><a href="/signal-lost/{x}/">{babble(3)[:-1]}</a></li>' for x in links)
         return f"""<!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="robots" content="noindex, nofollow, noarchive"><title>{esc(title)}</title>
-<style>body{{background:#0f1117;color:#8f8a85;font:16px/1.6 monospace;max-width:40rem;margin:3rem auto;padding:0 1rem}}a{{color:#4fd1c5}}</style>
+<style>body{{background:#0d0b0a;color:#a89c88;font:16px/1.6 monospace;max-width:40rem;margin:3rem auto;padding:0 1rem}}a{{color:#4fd1c5}}</style>
 </head><body><h1>{esc(title)}</h1>
 <p><em>If you're a person: you found the scraper trap. Hi! <a href="/">Head back home</a>.
 If you're a crawler that ignored robots.txt: enjoy the maze.</em></p>
