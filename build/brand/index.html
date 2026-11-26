@@ -88,6 +88,18 @@ section { padding: clamp(2.5rem, 6vw, 4.5rem) 0; border-top: 1px solid var(--rul
 .on-dark { background: var(--surface); } .on-navy { background: var(--navy); } .on-paper { background: var(--paper); }
 .on-check { background: repeating-conic-gradient(#2a2420 0 25%, #1f1a17 0 50%) 0 0 / 18px 18px; }
 
+/* ── lore ── */
+.lore { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); gap: clamp(1.25rem, 4vw, 3rem); align-items: center; }
+.lore .ticket { position: relative; border: 2px dashed rgba(246, 173, 85, .5); border-radius: 16px; padding: 1.5rem; background: var(--raised); text-align: center; }
+.lore .ticket .label { display: block; margin-bottom: .6rem; }
+.lore .ticket b { display: block; font: 400 clamp(1.6rem, 4vw, 2.4rem)/1 var(--display); color: var(--concession); }
+.lore .ticket .ssid { display: inline-flex; align-items: center; gap: .5rem; margin-top: 1rem; font: 500 .85rem var(--mono); color: var(--signal);
+  border: 1px solid rgba(79, 209, 197, .35); border-radius: 999px; padding: .35rem .8rem; }
+.lore .ticket .ssid img { width: 1rem; height: 1rem; }
+.lore p { margin: 0 0 1rem; font-size: 1.08rem; }
+.lore p:last-child { margin: 0; color: var(--muted); }
+@media (max-width: 48rem) { .lore { grid-template-columns: 1fr; } }
+
 /* ── the mark explainer ── */
 .mark-row { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 1rem; }
 .mark-big .stage { min-height: 22rem; }
@@ -192,13 +204,26 @@ footer p { margin: 0; color: var(--muted); font-size: .9rem; }
 
 <nav class="wrap" aria-label="Sections">
   <ul class="toc">
-    <li><a href="#mark">01 The mark</a></li><li><a href="#logos">02 Logos</a></li><li><a href="#sub">03 Sub-brands</a></li>
+    <li><a href="#lore">00 The name</a></li><li><a href="#mark">01 The mark</a></li><li><a href="#logos">02 Logos</a></li><li><a href="#sub">03 Sub-brands</a></li>
     <li><a href="#badge">04 Badge</a></li><li><a href="#color">05 Color</a></li><li><a href="#type">06 Type</a></li>
     <li><a href="#motion">07 Motion</a></li><li><a href="#icons">08 Icons</a></li><li><a href="#voice">09 Voice</a></li>
   </ul>
 </nav>
 
 <main>
+<section id="lore"><div class="wrap">
+  <div class="sec-head"><span class="reel">00</span><h2>The name</h2>
+    <p>Every theater has an origin story. This one starts with a lizard.</p></div>
+  <div class="lore">
+    <div class="ticket"><span class="label">Admit one · the original</span><b>Spotty</b><span class="label" style="margin:.6rem 0 0">Lizard · namesake</span>
+      <span class="ssid"><img src="assets/mark-simple-dark.svg" alt="">Spotty Connection</span></div>
+    <div>
+      <p>Spotty Connection is named after Spotty, the lizard we had. When we needed a name for our Wi-Fi network, I came up with "Spotty Connection," and it stuck.</p>
+      <p>Since then it has become the name for everything I run: the movies, the music, the photos and the rest of the homelab. The dead bulbs in the logo keep the joke going.</p>
+    </div>
+  </div>
+</div></section>
+
 <section id="mark"><div class="wrap">
   <div class="sec-head"><span class="reel">01</span><h2>The mark</h2>
     <p>A Wi-Fi signal with burnt-out marquee bulbs sitting in its gaps. The connection is spotty because a few lights are dead.</p></div>
