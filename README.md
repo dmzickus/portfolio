@@ -16,7 +16,7 @@ build/
   templates/base.html      page shell
   static/                  CSS, JS, fonts, logos (copied to /assets/)
   resume-print.css         PDF styling
-tools/make_logos.py        regenerates the logo set (rarely needed)
+tools/make_logos.py        the ORIGINAL logo set (superseded: brand assets now come from the Spotty Connection kit, see /brand/)
 website/                   build output, git-ignored; CI builds it
 ```
 
