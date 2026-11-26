@@ -5,6 +5,7 @@
 @font-face { font-family: "Space Grotesk"; src: url("/assets/fonts/spacegrotesk.woff2") format("woff2");
   font-weight: 300 700; font-display: swap; }
 @font-face { font-family: "Bungee"; src: url("/assets/fonts/bungee.woff2") format("woff2"); font-weight: 400; font-display: swap; }
+@font-face { font-family: "Bebas Neue"; src: url("/assets/fonts/bebas.woff2") format("woff2"); font-weight: 400; font-display: swap; }
 @font-face { font-family: "JetBrains Mono"; src: url("/assets/fonts/jetbrainsmono.woff2") format("woff2");
   font-weight: 400 600; font-display: swap; }
 
@@ -387,3 +388,43 @@ html[data-mode="showtime"] .ms-bulb { background: var(--amber); box-shadow: 0 0 
 html[data-mode="showtime"] .bars i:not(.on) { background: #3a322c; }
 html[data-mode="showtime"] .hero-mark .dud { fill: #3a322c; stroke: #5a4e44; }
 @media (prefers-reduced-motion: reduce) { html[data-mode="showtime"] .site-nav::after { animation: none; } }
+
+/* ── Showtime v2: lean all the way into the marquee ── */
+.show-only { display: none; }
+html[data-mode="showtime"] .show-only { display: inline; }
+html[data-mode="showtime"] p.show-only { display: block; }
+html[data-mode="showtime"] .house-only { display: none; }
+html[data-mode="showtime"] { --teal-link: var(--amber); }
+html[data-mode="showtime"] body {
+  background: radial-gradient(ellipse 90% 60% at 50% -10%, rgba(246, 173, 85, .07), transparent 60%),
+              radial-gradient(ellipse 120% 100% at 50% 50%, transparent 55%, rgba(0, 0, 0, .55)) fixed, var(--bg); }
+html[data-mode="showtime"] a { color: var(--amber); text-decoration-color: rgba(246, 173, 85, .45); }
+html[data-mode="showtime"] h1 { font-family: "Bungee", Impact, sans-serif; font-weight: 400; letter-spacing: 0; text-transform: uppercase; line-height: .95; }
+/* the name becomes a lit marquee sign */
+html[data-mode="showtime"] .home-hero h1 { display: inline-block; padding: .3em .55em .25em; margin-top: 1.4rem; border-radius: 18px;
+  background: #1a1614; border: 3px solid var(--amber); outline: 7px dotted var(--amber); outline-offset: 9px;
+  box-shadow: 0 0 40px rgba(246, 173, 85, .18), inset 0 0 0 1px rgba(246, 173, 85, .25);
+  animation: marquee-chase 1.2s steps(1) infinite; font-size: clamp(2.2rem, 6.5vw, 4rem); }
+@keyframes marquee-chase { 0%, 100% { outline-color: var(--amber); } 50% { outline-color: #f3e9d2; } }
+html[data-mode="showtime"] .hero-tag { margin: 1.6rem 0 1rem; font: 400 clamp(1.2rem, 2.6vw, 1.6rem)/1 "Bebas Neue", "Arial Narrow", sans-serif;
+  letter-spacing: .35em; color: var(--amber); }
+/* section labels: billing type with a bulb rule */
+html[data-mode="showtime"] .section-label { font: 400 1.5rem/1 "Bebas Neue", "Arial Narrow", sans-serif; letter-spacing: .28em; color: var(--amber); }
+html[data-mode="showtime"] .section-header::after { height: 6px; background: radial-gradient(circle, rgba(246, 173, 85, .8) 0 2px, transparent 2.5px) 0 50% / 16px 6px repeat-x; }
+/* cards: lobby posters */
+html[data-mode="showtime"] .slide > a > h3, html[data-mode="showtime"] .vrow-body h3 { font: 400 1.45rem/1 "Bebas Neue", "Arial Narrow", sans-serif; letter-spacing: .08em; text-transform: uppercase; }
+html[data-mode="showtime"] .slide-card, html[data-mode="showtime"] .vrow-img .cover { border: 1px solid rgba(246, 173, 85, .35); border-radius: 10px; }
+html[data-mode="showtime"] .slide > a:hover .slide-card { border-color: var(--amber); box-shadow: 0 0 0 3px rgba(246, 173, 85, .15), 0 12px 40px rgba(246, 173, 85, .12); animation: flicker .5s steps(1) 1; }
+@keyframes flicker { 0%, 100% { filter: none; } 20% { filter: brightness(.7); } 40% { filter: brightness(1.15); } 60% { filter: brightness(.85); } }
+/* badges: ticket stubs */
+html[data-mode="showtime"] .badge { border-style: dashed; border-radius: 3px; font-family: "Bebas Neue", "Arial Narrow", sans-serif; font-size: .9rem; letter-spacing: .14em; padding-top: .2rem; }
+html[data-mode="showtime"] .tag, html[data-mode="showtime"] .md-body code { border-radius: 2px; }
+html[data-mode="showtime"] .home-links a:hover, html[data-mode="showtime"] .vrow-body h3 a:hover { color: var(--amber); }
+html[data-mode="showtime"] .home-links .arrow { color: var(--amber); }
+html[data-mode="showtime"] :focus-visible { outline-color: var(--teal); }
+html[data-mode="showtime"] .md-body h2 { font: 400 1.7rem/1 "Bebas Neue", "Arial Narrow", sans-serif; letter-spacing: .1em; text-transform: uppercase; color: var(--amber); }
+@media (prefers-reduced-motion: reduce) { html[data-mode="showtime"] .home-hero h1 { animation: none; } }
+html[data-mode="showtime"] .hero-mark { display: block; margin: 0 auto; }
+html[data-mode="showtime"] .nav-links a { color: var(--muted); }
+html[data-mode="showtime"] .nav-links a:hover, html[data-mode="showtime"] .nav-links a[aria-current] { color: var(--amber); }
+@media (max-width: 34rem) { .nav-logo .logo-show { width: 10.5rem; } }

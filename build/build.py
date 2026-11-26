@@ -126,7 +126,14 @@ def bars(status: str) -> str:
 
 def badge(status: str) -> str:
     label = STATUSES.get(status, STATUSES["planned"])[0]
-    return f'<span class="badge badge-{status}">{bars(status)}{label}</span>'
+    marquee = SHOWTIME_LABELS.get(status, label)
+    return (f'<span class="badge badge-{status}">{bars(status)}<span class="house-only">{label}</span>'
+            f'<span class="show-only">{marquee}</span></span>')
+
+
+# Showtime mode renames statuses like a theater marquee.
+SHOWTIME_LABELS = {"live": "Now showing", "building": "Coming soon", "dormant": "Intermission",
+                   "retired": "Final curtain", "planned": "In production"}
 
 
 def tag_list(tags, cls="tags") -> str:
@@ -273,6 +280,7 @@ def build_home(site, projects):
   <div class="hero-bg" aria-hidden="true"></div>
   <button type="button" class="hero-mark" aria-label="Poke the signal">{read(STATIC / "brand" / "mark.svg")}</button>
   <h1>{esc(site["person"])}</h1>
+  <p class="hero-tag show-only">Now showing. Mostly.</p>
   <p class="home-intro">{inline_md(site["intro"])}</p>
   <ul class="home-links">{links}</ul>
 </section>
