@@ -100,6 +100,20 @@ section { padding: clamp(2.5rem, 6vw, 4.5rem) 0; border-top: 1px solid var(--rul
 .lore p:last-child { margin: 0; color: var(--muted); }
 @media (max-width: 48rem) { .lore { grid-template-columns: 1fr; } }
 
+/* ── two modes ── */
+.modes { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 26rem), 1fr)); gap: 1rem; }
+.mode { border: 1px solid var(--rule); border-radius: 14px; overflow: hidden; background: var(--raised); }
+.mode img { width: 100%; aspect-ratio: 16 / 10; object-fit: cover; border-bottom: 1px solid var(--rule); }
+.mode .body { padding: 1.1rem 1.2rem 1.3rem; }
+.mode h3 { margin: 0 0 .15rem; font: 400 1.5rem/1 var(--display); }
+.mode .who { margin: 0 0 .75rem; }
+.mode ul { margin: 0; padding-left: 1.1rem; color: var(--muted); font-size: .92rem; }
+.mode ul li { margin: .2rem 0; }
+.mode.house h3 { color: #a9b3cc; } .mode.show h3 { color: var(--concession); }
+.shared { margin-top: 1rem; border: 1px dashed rgba(79, 209, 197, .35); border-radius: 14px; padding: 1.1rem 1.2rem; }
+.shared ul { display: flex; flex-wrap: wrap; gap: .5rem; list-style: none; margin: .7rem 0 0; padding: 0; }
+.shared li { font: 500 .7rem var(--mono); letter-spacing: .08em; text-transform: uppercase; padding: .35rem .7rem; border-radius: 999px; border: 1px solid var(--rule); color: var(--ink); }
+
 /* ── the mark explainer ── */
 .mark-row { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 1rem; }
 .mark-big .stage { min-height: 22rem; }
@@ -206,7 +220,7 @@ footer p { margin: 0; color: var(--muted); font-size: .9rem; }
   <ul class="toc">
     <li><a href="#lore">00 The name</a></li><li><a href="#mark">01 The mark</a></li><li><a href="#logos">02 Logos</a></li><li><a href="#sub">03 Sub-brands</a></li>
     <li><a href="#badge">04 Badge</a></li><li><a href="#color">05 Color</a></li><li><a href="#type">06 Type</a></li>
-    <li><a href="#motion">07 Motion</a></li><li><a href="#icons">08 Icons</a></li><li><a href="#voice">09 Voice</a></li>
+    <li><a href="#motion">07 Motion</a></li><li><a href="#icons">08 Icons</a></li><li><a href="#voice">09 Voice</a></li><li><a href="#modes">10 Two modes</a></li>
   </ul>
 </nav>
 
@@ -326,15 +340,15 @@ footer p { margin: 0; color: var(--muted); font-size: .9rem; }
 
 <section id="motion"><div class="wrap">
   <div class="sec-head"><span class="reel">07</span><h2>Motion</h2>
-    <p>Warm and analog: eased fades and flickers, no slides or bounces. The dot lights first, the arcs power on ring by ring, the dud bulbs sputter out, then the name comes up.</p></div>
+    <p>Warm and analog: eased fades and flickers, no slides or bounces. The dot lights first, the arcs power on ring by ring, the dud bulbs sputter out, then the name comes up. Every animation respects reduced-motion settings.</p></div>
   <div class="grid g2">
-    <figure style="margin:0"><div class="screen"><video src="assets/sting-1080p.mp4" autoplay muted loop playsinline preload="metadata"></video></div><figcaption class="label" style="margin-top:.6rem">Power-on sting · 5 s · 1080p</figcaption></figure>
-    <figure style="margin:0"><div class="screen"><video src="assets/sting-cinemas-1080p.mp4" autoplay muted loop playsinline preload="metadata"></video></div><figcaption class="label" style="margin-top:.6rem">Cinemas sting · for the preshow</figcaption></figure>
+    <figure style="margin:0"><div class="screen"><video src="assets/sting-1080p.mp4" poster="assets/sting-1080p-poster.jpg" autoplay muted loop playsinline preload="metadata"></video></div><figcaption class="label" style="margin-top:.6rem">Power-on sting · 5 s · 1080p</figcaption></figure>
+    <figure style="margin:0"><div class="screen"><video src="assets/sting-cinemas-1080p.mp4" poster="assets/sting-cinemas-1080p-poster.jpg" autoplay muted loop playsinline preload="metadata"></video></div><figcaption class="label" style="margin-top:.6rem">Cinemas sting · for the preshow</figcaption></figure>
   </div>
   <div class="grid g3" style="margin-top:1rem">
     <div class="tile"><div class="stage on-dark"><img src="assets/mark-animated.svg" alt="Animated mark" style="max-height:10rem"></div><div class="cap"><span class="label">Looping SVG · CSS only</span><a href="assets/mark-animated.svg" download>SVG</a></div></div>
-    <div class="tile"><div class="stage on-dark"><img src="assets/sting-mark-360.gif" alt="Power-on GIF" style="max-height:10rem"></div><div class="cap"><span class="label">GIF · for READMEs</span><a href="assets/sting-mark-360.gif" download>GIF</a></div></div>
-    <div class="tile"><div class="stage on-dark" style="text-align:center"><p class="label" style="margin:0">Every animation respects<br>prefers-reduced-motion</p></div><div class="cap"><span class="label">Accessibility</span><span></span></div></div>
+    <div class="tile"><div class="stage on-dark"><img src="assets/sting-mark-360.gif" alt="Power-on GIF, mark only" style="max-height:10rem"></div><div class="cap"><span class="label">GIF · mark only</span><a href="assets/sting-mark-360.gif" download>GIF</a></div></div>
+    <div class="tile"><div class="stage on-dark"><img src="assets/sting-640.gif" alt="Power-on GIF with wordmark" style="max-height:10rem"></div><div class="cap"><span class="label">GIF · full frame</span><a href="assets/sting-640.gif" download>GIF</a></div></div>
   </div>
 </div></section>
 
@@ -360,6 +374,21 @@ footer p { margin: 0; color: var(--muted); font-size: .9rem; }
   <div class="sec-head"><span class="reel">09</span><h2>Voice</h2>
     <p>Wry and old-cinema. Signage is in caps, everything else is in plain sentence case. An outage is a feature: "We're experiencing a spotty connection."</p></div>
   <div class="signs"><div>Now showing</div><div>Please stand by</div><div>Intermission</div><div>Technical difficulties</div></div>
+</div></section>
+<section id="modes"><div class="wrap">
+  <div class="sec-head"><span class="reel">10</span><h2>Two modes</h2>
+    <p>One brand, two lighting cues. House lights is the calm, professional version. Showtime is the full marquee. Both use the same mark, the same teal and amber, and the same dead bulbs.</p></div>
+  <div class="modes">
+    <div class="mode house"><img src="assets/site-house.jpg" alt="dylanzickus.com in House lights mode" width="960" height="600">
+      <div class="body"><h3>House lights</h3><p class="label who">Site · resume · LinkedIn · GitHub</p>
+        <ul><li>Navy background, cool off-white text</li><li>Space Grotesk headings, mono labels</li><li>The mark and its power-on animation are the only marquee touches</li></ul></div></div>
+    <div class="mode show"><img src="assets/site-showtime.jpg" alt="dylanzickus.com in Showtime mode" width="960" height="600">
+      <div class="body"><h3>Showtime</h3><p class="label who">Self-hosted services · preshows · dashboards · stickers</p>
+        <ul><li>Marquee black, projector cream, amber links</li><li>Bungee and Bebas Neue, chasing bulbs, poster cards</li><li>Statuses become Now showing, Coming soon, Intermission, Final curtain</li></ul></div></div>
+  </div>
+  <div class="shared"><span class="label">Shared in both</span>
+    <ul><li>The hybrid mark</li><li>Teal = live / links</li><li>Amber = accent</li><li>Mono labels</li><li>One dead bulb somewhere</li><li>The power-on animation</li></ul></div>
+  <p class="label" style="margin-top:1rem">On dylanzickus.com, the footer switch dims the house lights. There's also another way in.</p>
 </div></section>
 </main>
 
