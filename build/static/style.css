@@ -429,3 +429,7 @@ html[data-mode="showtime"] .hero-mark { display: block; margin: 0 auto; }
 html[data-mode="showtime"] .nav-links a { color: var(--muted); }
 html[data-mode="showtime"] .nav-links a:hover, html[data-mode="showtime"] .nav-links a[aria-current] { color: var(--amber); }
 @media (max-width: 34rem) { .nav-logo .logo-show { width: 10.5rem; } }
+
+/* the footer brand name is a quiet door to /brand/ (no underline, same color as the text around it) */
+.site-footer a.quiet, html[data-mode="showtime"] .site-footer a.quiet { color: inherit; text-decoration: none; }
+.site-footer a.quiet:hover { color: var(--amber); }
