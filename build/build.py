@@ -687,6 +687,7 @@ def main():
     shutil.copytree(STATIC, OUT / "assets", ignore=shutil.ignore_patterns("CNAME"))
     shutil.copy(STATIC / "CNAME", OUT / "CNAME")
     shutil.copy(STATIC / "brand" / "favicon.svg", OUT / "favicon.svg")
+    shutil.copytree(BUILD / "brand", OUT / "brand", dirs_exist_ok=True)  # standalone brand-kit page at /brand/
 
     build_home(site, projects)
     build_projects_index(site, projects)

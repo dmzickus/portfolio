@@ -1,0 +1,375 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Spotty Connection — Brand Kit</title>
+<meta name="description" content="Logos, colors, type and motion for Spotty Connection.">
+<meta name="theme-color" content="#0d0b0a">
+<link rel="icon" href="/brand/assets/favicon-dark.svg" type="image/svg+xml">
+<meta property="og:title" content="Spotty Connection — Brand Kit">
+<meta property="og:description" content="Now showing. Mostly.">
+<meta property="og:image" content="https://dylanzickus.com/brand/assets/app-icon-dark-512.png">
+<style>
+@font-face { font-family: "Bungee"; src: url("assets/fonts/bungee.woff2") format("woff2"); font-display: swap; }
+@font-face { font-family: "Bebas Neue"; src: url("assets/fonts/bebas.woff2") format("woff2"); font-display: swap; }
+@font-face { font-family: "IBM Plex Mono"; src: url("assets/fonts/plexmono-500.woff2") format("woff2"); font-weight: 500; font-display: swap; }
+@font-face { font-family: "IBM Plex Sans"; src: url("assets/fonts/plexsans-400.woff2") format("woff2"); font-weight: 400; font-display: swap; }
+@font-face { font-family: "IBM Plex Sans"; src: url("assets/fonts/plexsans-600.woff2") format("woff2"); font-weight: 600; font-display: swap; }
+
+:root {
+  --surface: #0d0b0a; --raised: #1a1614; --ink: #f3e9d2; --muted: #a89c88; --rule: #2e2722;
+  --signal: #4fd1c5; --concession: #f6ad55; --dud: #3a322c; --red: #d9483b;
+  --navy: #1b2440; --paper: #f3e9d2; --paper-ink: #1a1614;
+  --display: "Bungee", Impact, "Arial Black", sans-serif;
+  --billing: "Bebas Neue", "Oswald", "Arial Narrow", sans-serif;
+  --mono: "IBM Plex Mono", "JetBrains Mono", ui-monospace, monospace;
+  --sans: "IBM Plex Sans", system-ui, sans-serif;
+  --wide: 76rem;
+}
+*, *::before, *::after { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { margin: 0; background: var(--surface); color: var(--ink); font: 400 1rem/1.65 var(--sans); -webkit-font-smoothing: antialiased; }
+img, video { display: block; max-width: 100%; height: auto; }
+a { color: var(--signal); text-underline-offset: 3px; }
+:focus-visible { outline: 2px solid var(--concession); outline-offset: 3px; }
+::selection { background: var(--concession); color: var(--surface); }
+.wrap { max-width: var(--wide); margin: 0 auto; padding: 0 clamp(1.25rem, 5vw, 3rem); }
+.label { font: 500 .7rem/1.3 var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+
+/* ── top bar ── */
+.bar { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1rem clamp(1.25rem, 5vw, 3rem); border-bottom: 1px solid var(--rule); }
+.bar a { font: 500 .72rem var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); text-decoration: none; }
+.bar a:hover { color: var(--ink); }
+
+/* ── marquee hero ── */
+.hero { padding: clamp(2.5rem, 7vw, 5rem) 0 clamp(2rem, 5vw, 3.5rem); }
+.sign { position: relative; border: 3px solid var(--concession); border-radius: 28px; background: var(--raised);
+  padding: clamp(1.75rem, 5vw, 3.5rem); display: grid; grid-template-columns: auto 1fr; gap: clamp(1.25rem, 4vw, 3rem); align-items: center; }
+.sign::before { content: ""; position: absolute; inset: 12px; border: 1px solid rgba(246, 173, 85, .3); border-radius: 18px; pointer-events: none; }
+.bulbs { position: absolute; inset: -3px; pointer-events: none; }
+.bulbs i { position: absolute; width: 10px; height: 10px; margin: -5px; border-radius: 50%; background: var(--ink);
+  animation: chase 1.8s steps(1) infinite; }
+.bulbs i:nth-child(2n) { background: var(--concession); }
+.bulbs i.dead { background: var(--dud); animation: none; }
+@keyframes chase { 0%, 100% { opacity: 1; } 50% { opacity: .35; } }
+.sign .mark { width: clamp(7rem, 18vw, 12rem); }
+.sign h1 { font: 400 clamp(2.4rem, 8vw, 5.8rem)/.9 var(--display); margin: 0; }
+.sign .tag { font: 400 clamp(1.3rem, 3vw, 2rem)/1 var(--billing); letter-spacing: .32em; color: var(--concession); margin: 1rem 0 0; }
+.hero-meta { display: flex; flex-wrap: wrap; gap: .75rem 1.5rem; align-items: center; justify-content: space-between; margin-top: 1.5rem; }
+.hero-meta p { margin: 0; max-width: 42rem; color: var(--muted); }
+.btn { display: inline-flex; align-items: center; gap: .6rem; padding: .75rem 1.2rem; border-radius: 999px; background: var(--concession); color: var(--surface);
+  font: 500 .78rem var(--mono); letter-spacing: .1em; text-transform: uppercase; text-decoration: none; white-space: nowrap; }
+.btn:hover { background: var(--ink); }
+.btn.ghost { background: none; color: var(--ink); border: 1px solid var(--rule); }
+.btn.ghost:hover { border-color: var(--signal); color: var(--signal); }
+
+/* ── program / sections ── */
+.toc { display: flex; flex-wrap: wrap; gap: .4rem .5rem; margin: 0 0 1rem; padding: 0; list-style: none; }
+.toc a { display: inline-block; padding: .35rem .7rem; border: 1px solid var(--rule); border-radius: 999px; font: 500 .68rem var(--mono);
+  letter-spacing: .1em; text-transform: uppercase; color: var(--muted); text-decoration: none; }
+.toc a:hover { color: var(--ink); border-color: var(--concession); }
+section { padding: clamp(2.5rem, 6vw, 4.5rem) 0; border-top: 1px solid var(--rule); }
+.sec-head { display: grid; grid-template-columns: auto 1fr; gap: .2rem 1.25rem; align-items: baseline; margin-bottom: 2rem; }
+.reel { grid-row: span 2; font: 400 clamp(2.6rem, 6vw, 4rem)/.85 var(--display); color: var(--dud); }
+.sec-head h2 { margin: 0; font: 400 clamp(1.5rem, 3.5vw, 2.2rem)/1 var(--display); }
+.sec-head p { margin: 0; color: var(--muted); max-width: 46rem; }
+
+/* ── cards ── */
+.grid { display: grid; gap: 1rem; }
+.g2 { grid-template-columns: repeat(auto-fit, minmax(min(100%, 30rem), 1fr)); }
+.g3 { grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr)); }
+.g4 { grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr)); }
+.tile { border: 1px solid var(--rule); border-radius: 14px; overflow: hidden; background: var(--raised); display: flex; flex-direction: column; }
+.tile .stage { flex: 1; display: grid; place-items: center; padding: clamp(1.25rem, 3vw, 2rem); min-height: 11rem; }
+.tile .stage img { max-height: 13rem; width: auto; }
+.tile .cap { display: flex; justify-content: space-between; gap: .75rem; align-items: center; padding: .7rem 1rem; border-top: 1px solid var(--rule); }
+.tile .cap a { font: 500 .66rem var(--mono); letter-spacing: .1em; text-transform: uppercase; text-decoration: none; }
+.on-dark { background: var(--surface); } .on-navy { background: var(--navy); } .on-paper { background: var(--paper); }
+.on-check { background: repeating-conic-gradient(#2a2420 0 25%, #1f1a17 0 50%) 0 0 / 18px 18px; }
+
+/* ── the mark explainer ── */
+.mark-row { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 1rem; }
+.mark-big .stage { min-height: 22rem; }
+.mark-big .stage img { width: min(100%, 22rem); max-height: none; }
+.rules { list-style: none; margin: 0; padding: 0; display: grid; gap: .75rem; }
+.rules li { border: 1px solid var(--rule); border-radius: 12px; padding: .9rem 1rem; background: var(--raised); }
+.rules b { display: block; font: 400 1.25rem/1.1 var(--billing); letter-spacing: .08em; color: var(--concession); margin-bottom: .2rem; }
+.rules li.ok b { color: var(--signal); }
+.sizes { display: flex; align-items: end; gap: 1.25rem; flex-wrap: wrap; }
+.sizes figure { margin: 0; text-align: center; }
+.sizes figcaption { margin-top: .4rem; }
+.tile .stage .sizes img { width: var(--s); height: var(--s); max-height: none; margin: 0 auto; }
+
+/* ── sub-brands ── */
+.sub .stage { min-height: 9rem; }
+.sub .stage img { max-height: 8rem; }
+.sub .cap span:first-child { font: 400 1.15rem/1 var(--billing); letter-spacing: .2em; }
+
+/* ── color ── */
+.swatches { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 11rem), 1fr)); gap: 1rem; }
+.sw { border: 1px solid var(--rule); border-radius: 14px; overflow: hidden; background: var(--raised); cursor: pointer; text-align: left; color: inherit; font: inherit; padding: 0; }
+.sw .chip { height: 7.5rem; position: relative; }
+.sw .chip span { position: absolute; right: .6rem; bottom: .5rem; font: 500 .6rem var(--mono); letter-spacing: .1em; text-transform: uppercase; opacity: 0; transition: opacity .15s; }
+.sw:hover .chip span, .sw.copied .chip span { opacity: 1; }
+.sw .meta { padding: .7rem .85rem .85rem; }
+.sw .name { font: 400 1.15rem/1.1 var(--billing); letter-spacing: .1em; }
+.sw .hex { font: 500 .72rem var(--mono); color: var(--muted); letter-spacing: .06em; }
+.sw .use { font-size: .82rem; color: var(--muted); margin: .35rem 0 0; line-height: 1.45; }
+.sw.big { grid-column: span 2; } .sw.big .chip { height: 10rem; }
+@media (max-width: 40rem) { .sw.big { grid-column: auto; } }
+.themes { margin-top: 1.5rem; }
+.theme { border-radius: 14px; padding: 1.4rem; border: 1px solid var(--rule); }
+.theme h3 { margin: 0 0 .25rem; font: 400 1.4rem/1 var(--display); }
+.theme p { margin: 0 0 1rem; font-size: .9rem; }
+.theme .dots { display: flex; gap: .45rem; }
+.theme .dots i { width: 1.6rem; height: 1.6rem; border-radius: 50%; border: 1px solid rgba(127, 127, 127, .35); }
+.t-dark { background: var(--surface); color: var(--ink); } .t-dark p { color: var(--muted); }
+.t-navy { background: var(--navy); color: var(--ink); } .t-navy p { color: #a9b0c4; }
+.t-paper { background: var(--paper); color: var(--paper-ink); } .t-paper p { color: #5c5246; }
+
+/* ── type ── */
+.spec { border: 1px solid var(--rule); border-radius: 14px; background: var(--raised); padding: clamp(1.25rem, 3vw, 2rem); }
+.spec .row { display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem; }
+.spec .sample { margin: 0; overflow-wrap: anywhere; }
+.s-display { font: 400 clamp(2.2rem, 6vw, 4.2rem)/.95 var(--display); }
+.s-billing { font: 400 clamp(1.8rem, 4vw, 2.8rem)/1 var(--billing); letter-spacing: .32em; color: var(--concession); }
+.s-mono { font: 500 1rem/1.5 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--signal); }
+.s-sans { font: 400 1.1rem/1.6 var(--sans); max-width: 40rem; }
+.alpha { font-family: var(--mono); font-size: .8rem; color: var(--muted); margin: 1rem 0 0; letter-spacing: .05em; }
+
+/* ── motion ── */
+.screen { border-radius: 14px; overflow: hidden; border: 1px solid var(--rule); background: #000; }
+.screen video { width: 100%; aspect-ratio: 16 / 9; }
+
+/* ── voice ── */
+.signs { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr)); gap: 1rem; }
+.signs div { border: 2px solid var(--rule); border-radius: 12px; padding: 1.2rem; text-align: center; font: 400 1.6rem/1 var(--billing); letter-spacing: .22em; }
+.signs div:nth-child(1) { color: var(--concession); border-color: rgba(246, 173, 85, .4); }
+.signs div:nth-child(2) { color: var(--signal); border-color: rgba(79, 209, 197, .4); }
+.signs div:nth-child(3) { color: var(--ink); }
+.signs div:nth-child(4) { color: var(--red); border-color: rgba(217, 72, 59, .45); }
+
+footer { border-top: 1px solid var(--rule); padding: 2.5rem 0 3.5rem; }
+footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 1rem; align-items: center; }
+footer p { margin: 0; color: var(--muted); font-size: .9rem; }
+
+.toast { position: fixed; left: 50%; bottom: 1.5rem; transform: translate(-50%, 150%); background: var(--ink); color: var(--surface);
+  font: 500 .75rem var(--mono); letter-spacing: .1em; text-transform: uppercase; padding: .6rem 1rem; border-radius: 999px; transition: transform .25s; visibility: hidden; }
+.toast.show { transform: translate(-50%, 0); visibility: visible; }
+
+@media (max-width: 48rem) {
+  .sign { grid-template-columns: 1fr; text-align: center; justify-items: center; }
+  .mark-row { grid-template-columns: 1fr; }
+}
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+</style>
+</head>
+<body>
+
+<div class="bar">
+  <a href="/">← dylanzickus.com</a>
+  <a href="spotty-connection-brand-kit.zip" download>Download kit (.zip)</a>
+</div>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="sign">
+      <div class="bulbs" aria-hidden="true" data-bulbs></div>
+      <img class="mark" src="assets/mark-animated.svg" alt="Spotty Connection mark: a Wi-Fi symbol with a few burnt-out bulbs" width="512" height="512">
+      <div>
+        <p class="label" style="margin:0 0 .75rem">Brand kit · v1 · Nov 2026</p>
+        <h1>Spotty<br>Connection</h1>
+        <p class="tag">Now showing. Mostly.</p>
+      </div>
+    </div>
+    <div class="hero-meta">
+      <p>The house brand for everything I self-host: the media server, the music, the photo backups, the retro box, the homelab and whatever comes next. It's an old movie-theater marquee where a few bulbs are always out.</p>
+      <a class="btn" href="spotty-connection-brand-kit.zip" download>↓ Full kit · SVG, PNG, video</a>
+    </div>
+  </div>
+</header>
+
+<nav class="wrap" aria-label="Sections">
+  <ul class="toc">
+    <li><a href="#mark">01 The mark</a></li><li><a href="#logos">02 Logos</a></li><li><a href="#sub">03 Sub-brands</a></li>
+    <li><a href="#badge">04 Badge</a></li><li><a href="#color">05 Color</a></li><li><a href="#type">06 Type</a></li>
+    <li><a href="#motion">07 Motion</a></li><li><a href="#icons">08 Icons</a></li><li><a href="#voice">09 Voice</a></li>
+  </ul>
+</nav>
+
+<main>
+<section id="mark"><div class="wrap">
+  <div class="sec-head"><span class="reel">01</span><h2>The mark</h2>
+    <p>A Wi-Fi signal with burnt-out marquee bulbs sitting in its gaps. The connection is spotty because a few lights are dead.</p></div>
+  <div class="mark-row">
+    <div class="tile mark-big"><div class="stage on-dark"><img src="assets/mark-dark.svg" alt="Primary mark" width="512" height="512"></div>
+      <div class="cap"><span class="label">Primary mark</span><a href="assets/mark-dark.svg" download>SVG</a></div></div>
+    <ul class="rules">
+      <li class="ok"><b>The duds are fixed</b>One dead bulb in the middle arc and two in the outer arc. Never light them, move them, or add more. That pattern is the logo.</li>
+      <li class="ok"><b>Teal inside, amber outside</b>The inner arcs are signal teal. The outer arc and the access-point dot are concession amber.</li>
+      <li class="ok"><b>Small sizes use the simple mark</b>At 48 px and below, swap to the favicon version: the same arcs with plain gaps and no bulbs.</li>
+      <li><b>Don't</b>Recolor it, rotate it, add drop shadows, outline the wordmark, stretch a lockup, or put it on a photo without a dark plate.</li>
+    </ul>
+  </div>
+  <div class="tile" style="margin-top:1rem"><div class="stage on-dark">
+    <div class="sizes">
+      <figure><img src="assets/mark-dark.svg" style="--s:128px" alt=""><figcaption class="label">128 · primary</figcaption></figure>
+      <figure><img src="assets/mark-dark.svg" style="--s:64px" alt=""><figcaption class="label">64</figcaption></figure>
+      <figure><img src="assets/mark-simple-dark.svg" style="--s:48px" alt=""><figcaption class="label">48 · simple</figcaption></figure>
+      <figure><img src="assets/mark-simple-dark.svg" style="--s:32px" alt=""><figcaption class="label">32</figcaption></figure>
+      <figure><img src="assets/mark-simple-dark.svg" style="--s:16px" alt=""><figcaption class="label">16</figcaption></figure>
+    </div></div>
+    <div class="cap"><span class="label">Size ladder</span><a href="assets/mark-simple-dark.svg" download>Simple mark SVG</a></div></div>
+</div></section>
+
+<section id="logos"><div class="wrap">
+  <div class="sec-head"><span class="reel">02</span><h2>Logos</h2>
+    <p>Horizontal for headers and banners, stacked for square spots and splash screens. Dark is the default. Navy is the backup, paper is for print and light UIs, and mono is for laser-cutting, embroidery and watermarks.</p></div>
+  <div class="grid g2">
+    <div class="tile"><div class="stage on-dark"><img src="assets/horizontal-dark.svg" alt="Horizontal logo, dark"></div><div class="cap"><span class="label">Horizontal · dark</span><a href="assets/horizontal-dark.svg" download>SVG</a></div></div>
+    <div class="tile"><div class="stage on-navy"><img src="assets/horizontal-navy.svg" alt="Horizontal logo, navy"></div><div class="cap"><span class="label">Horizontal · navy</span><a href="assets/horizontal-navy.svg" download>SVG</a></div></div>
+    <div class="tile"><div class="stage on-paper"><img src="assets/horizontal-light.svg" alt="Horizontal logo, paper"></div><div class="cap"><span class="label">Horizontal · paper</span><a href="assets/horizontal-light.svg" download>SVG</a></div></div>
+    <div class="tile"><div class="stage on-check"><img src="assets/horizontal-mono.svg" alt="Horizontal logo, mono"></div><div class="cap"><span class="label">Horizontal · mono</span><a href="assets/horizontal-mono.svg" download>SVG</a></div></div>
+  </div>
+  <div class="grid g4" style="margin-top:1rem">
+    <div class="tile"><div class="stage on-dark"><img src="assets/stacked-dark.svg" alt="Stacked logo, dark"></div><div class="cap"><span class="label">Stacked · dark</span><a href="assets/stacked-dark.svg" download>SVG</a></div></div>
+    <div class="tile"><div class="stage on-navy"><img src="assets/stacked-navy.svg" alt="Stacked logo, navy"></div><div class="cap"><span class="label">Stacked · navy</span><a href="assets/stacked-navy.svg" download>SVG</a></div></div>
+    <div class="tile"><div class="stage on-paper"><img src="assets/stacked-light.svg" alt="Stacked logo, paper"></div><div class="cap"><span class="label">Stacked · paper</span><a href="assets/stacked-light.svg" download>SVG</a></div></div>
+    <div class="tile"><div class="stage on-check"><img src="assets/stacked-mono.svg" alt="Stacked logo, mono"></div><div class="cap"><span class="label">Stacked · mono</span><a href="assets/stacked-mono.svg" download>SVG</a></div></div>
+  </div>
+  <div class="tile" style="margin-top:1rem"><div class="stage on-dark"><img src="assets/wordmark-dark.svg" alt="Wordmark" style="max-height:4rem"></div><div class="cap"><span class="label">Wordmark only</span><a href="assets/wordmark-dark.svg" download>SVG</a></div></div>
+</div></section>
+
+<section id="sub"><div class="wrap">
+  <div class="sec-head"><span class="reel">03</span><h2>Sub-brands</h2>
+    <p>Each product gets the full wordmark plus its name, set between two rules in its own color. New products get one too: one word, all caps, one accent color.</p></div>
+  <div class="grid g2">
+    <div class="tile sub"><div class="stage on-dark"><img src="assets/cinemas-horizontal-dark.svg" alt="Spotty Connection Cinemas"></div><div class="cap"><span style="color:#f6ad55">Cinemas</span><span class="label">Movies + preshows · #F6AD55</span></div></div>
+    <div class="tile sub"><div class="stage on-dark"><img src="assets/radio-horizontal-dark.svg" alt="Spotty Connection Radio"></div><div class="cap"><span style="color:#4fd1c5">Radio</span><span class="label">Music · #4FD1C5</span></div></div>
+    <div class="tile sub"><div class="stage on-dark"><img src="assets/photos-horizontal-dark.svg" alt="Spotty Connection Photos"></div><div class="cap"><span style="color:#ef8f9f">Photos</span><span class="label">Photos + backups · #EF8F9F</span></div></div>
+    <div class="tile sub"><div class="stage on-dark"><img src="assets/arcade-horizontal-dark.svg" alt="Spotty Connection Arcade"></div><div class="cap"><span style="color:#a68cf2">Arcade</span><span class="label">Retro games · #A68CF2</span></div></div>
+    <div class="tile sub"><div class="stage on-dark"><img src="assets/labs-horizontal-dark.svg" alt="Spotty Connection Labs"></div><div class="cap"><span style="color:#9be07a">Labs</span><span class="label">Hardware + experiments · #9BE07A</span></div></div>
+    <div class="tile sub"><div class="stage on-dark"><img src="assets/ops-horizontal-dark.svg" alt="Spotty Connection Ops"></div><div class="cap"><span style="color:#d9483b">Ops</span><span class="label">Monitoring + reports · #D9483B</span></div></div>
+  </div>
+</div></section>
+
+<section id="badge"><div class="wrap">
+  <div class="sec-head"><span class="reel">04</span><h2>The badge</h2>
+    <p>The secondary logo: a marquee sign with a chasing-bulb border. Use it for the fun spots, like 404 pages, sticker sheets and "now showing" panels.</p></div>
+  <div class="grid g3">
+    <div class="tile"><div class="stage on-dark"><img src="assets/marquee-badge-dark.svg" alt="Marquee badge"></div><div class="cap"><span class="label">Badge · now showing</span><a href="assets/marquee-badge-dark.svg" download>SVG</a></div></div>
+    <div class="tile"><div class="stage on-dark"><img src="assets/cinemas-badge.svg" alt="Cinemas badge"></div><div class="cap"><span class="label">Badge · cinemas</span><a href="assets/cinemas-badge.svg" download>SVG</a></div></div>
+    <div class="tile"><div class="stage on-dark"><img src="assets/arcade-badge.svg" alt="Arcade badge"></div><div class="cap"><span class="label">Badge · arcade</span><a href="assets/arcade-badge.svg" download>SVG</a></div></div>
+  </div>
+</div></section>
+
+<section id="color"><div class="wrap">
+  <div class="sec-head"><span class="reel">05</span><h2>Color</h2>
+    <p>Warm black and projector cream, with teal and amber as the lights. Click any swatch to copy its hex.</p></div>
+  <div class="swatches">
+    <button class="sw big" data-hex="#0D0B0A"><div class="chip" style="background:#0d0b0a;border-bottom:1px solid var(--rule)"><span style="color:#f3e9d2">Copy</span></div><div class="meta"><div class="name">Marquee black</div><div class="hex">#0D0B0A · surface</div><p class="use">The background behind everything.</p></div></button>
+    <button class="sw big" data-hex="#F3E9D2"><div class="chip" style="background:#f3e9d2"><span style="color:#1a1614">Copy</span></div><div class="meta"><div class="name">Projector cream</div><div class="hex">#F3E9D2 · ink</div><p class="use">Text and the wordmark. 15.9:1 on black.</p></div></button>
+    <button class="sw" data-hex="#4FD1C5"><div class="chip" style="background:#4fd1c5"><span style="color:#0d0b0a">Copy</span></div><div class="meta"><div class="name">Signal teal</div><div class="hex">#4FD1C5</div><p class="use">Inner arcs, links, focus.</p></div></button>
+    <button class="sw" data-hex="#F6AD55"><div class="chip" style="background:#f6ad55"><span style="color:#0d0b0a">Copy</span></div><div class="meta"><div class="name">Concession amber</div><div class="hex">#F6AD55</div><p class="use">Outer arc, the dot, accent rules.</p></div></button>
+    <button class="sw" data-hex="#1A1614"><div class="chip" style="background:#1a1614"><span style="color:#f3e9d2">Copy</span></div><div class="meta"><div class="name">Booth</div><div class="hex">#1A1614 · raised</div><p class="use">Cards and panels.</p></div></button>
+    <button class="sw" data-hex="#A89C88"><div class="chip" style="background:#a89c88"><span style="color:#0d0b0a">Copy</span></div><div class="meta"><div class="name">Program gray</div><div class="hex">#A89C88 · muted</div><p class="use">Captions and labels.</p></div></button>
+    <button class="sw" data-hex="#3A322C"><div class="chip" style="background:#3a322c"><span style="color:#f3e9d2">Copy</span></div><div class="meta"><div class="name">Dud</div><div class="hex">#3A322C</div><p class="use">Dead bulbs only.</p></div></button>
+    <button class="sw" data-hex="#D9483B"><div class="chip" style="background:#d9483b"><span style="color:#0d0b0a">Copy</span></div><div class="meta"><div class="name">Curtain red</div><div class="hex">#D9483B</div><p class="use">On air, alerts, Ops. Use sparingly.</p></div></button>
+  </div>
+  <div class="grid g3 themes">
+    <div class="theme t-dark"><h3>Marquee</h3><p>Primary theme</p><div class="dots"><i style="background:#0d0b0a"></i><i style="background:#f3e9d2"></i><i style="background:#4fd1c5"></i><i style="background:#f6ad55"></i></div></div>
+    <div class="theme t-navy"><h3>Navy</h3><p>Backup theme</p><div class="dots"><i style="background:#1b2440"></i><i style="background:#f3e9d2"></i><i style="background:#4fd1c5"></i><i style="background:#f6ad55"></i></div></div>
+    <div class="theme t-paper"><h3>Paper</h3><p>Print and light UIs. The accents are darker here and meant for marks and big type, not body text.</p><div class="dots"><i style="background:#f3e9d2"></i><i style="background:#1a1614"></i><i style="background:#1f8a80"></i><i style="background:#c46f12"></i></div></div>
+  </div>
+</div></section>
+
+<section id="type"><div class="wrap">
+  <div class="sec-head"><span class="reel">06</span><h2>Type</h2>
+    <p>Four free faces, each with a fallback chain. The logos are outlined, so they never depend on a font being installed.</p></div>
+  <div class="grid">
+    <div class="spec"><div class="row"><span class="label">Display · Bungee</span><span class="label">Fallback: Impact, Arial Black</span></div>
+      <p class="sample s-display">Tonight's feature</p><p class="alpha">ABCDEFGHIJKLMNOPQRSTUVWXYZ 0123456789 — all caps, short lines</p></div>
+    <div class="grid g2">
+      <div class="spec"><div class="row"><span class="label">Billing · Bebas Neue</span><span class="label">Tracked +0.32em</span></div><p class="sample s-billing">Cinemas</p><p class="alpha">Sub-brand names and signage</p></div>
+      <div class="spec"><div class="row"><span class="label">Labels · IBM Plex Mono 500</span><span class="label">Fallback: JetBrains Mono</span></div><p class="sample s-mono">Reel 02 · 1080p · 24 fps</p><p class="alpha">Timestamps, tags, UI chrome</p></div>
+    </div>
+    <div class="spec"><div class="row"><span class="label">Body · IBM Plex Sans</span><span class="label">Fallback: system-ui · DejaVu for server-made cards</span></div>
+      <p class="sample s-sans">The lights come up slowly, one ring at a time. A couple of bulbs flicker, think about it, and give up. The show starts anyway.</p></div>
+  </div>
+</div></section>
+
+<section id="motion"><div class="wrap">
+  <div class="sec-head"><span class="reel">07</span><h2>Motion</h2>
+    <p>Warm and analog: eased fades and flickers, no slides or bounces. The dot lights first, the arcs power on ring by ring, the dud bulbs sputter out, then the name comes up.</p></div>
+  <div class="grid g2">
+    <figure style="margin:0"><div class="screen"><video src="assets/sting-1080p.mp4" autoplay muted loop playsinline preload="metadata"></video></div><figcaption class="label" style="margin-top:.6rem">Power-on sting · 5 s · 1080p</figcaption></figure>
+    <figure style="margin:0"><div class="screen"><video src="assets/sting-cinemas-1080p.mp4" autoplay muted loop playsinline preload="metadata"></video></div><figcaption class="label" style="margin-top:.6rem">Cinemas sting · for the preshow</figcaption></figure>
+  </div>
+  <div class="grid g3" style="margin-top:1rem">
+    <div class="tile"><div class="stage on-dark"><img src="assets/mark-animated.svg" alt="Animated mark" style="max-height:10rem"></div><div class="cap"><span class="label">Looping SVG · CSS only</span><a href="assets/mark-animated.svg" download>SVG</a></div></div>
+    <div class="tile"><div class="stage on-dark"><img src="assets/sting-mark-360.gif" alt="Power-on GIF" style="max-height:10rem"></div><div class="cap"><span class="label">GIF · for READMEs</span><a href="assets/sting-mark-360.gif" download>GIF</a></div></div>
+    <div class="tile"><div class="stage on-dark" style="text-align:center"><p class="label" style="margin:0">Every animation respects<br>prefers-reduced-motion</p></div><div class="cap"><span class="label">Accessibility</span><span></span></div></div>
+  </div>
+</div></section>
+
+<section id="icons"><div class="wrap">
+  <div class="sec-head"><span class="reel">08</span><h2>Icons</h2>
+    <p>App icons use the full mark. Favicons use the simple one. The kit has PNGs from 16 to 1024 px.</p></div>
+  <div class="grid g3">
+    <div class="tile"><div class="stage on-check"><img src="assets/app-icon-dark.svg" alt="App icon, dark" style="width:9rem"></div><div class="cap"><span class="label">App icon · dark</span><a href="assets/app-icon-dark.svg" download>SVG</a></div></div>
+    <div class="tile"><div class="stage on-check"><img src="assets/app-icon-navy.svg" alt="App icon, navy" style="width:9rem"></div><div class="cap"><span class="label">App icon · navy</span><a href="assets/app-icon-navy.svg" download>SVG</a></div></div>
+    <div class="tile"><div class="stage on-check"><img src="assets/app-icon-light.svg" alt="App icon, paper" style="width:9rem"></div><div class="cap"><span class="label">App icon · paper</span><a href="assets/app-icon-light.svg" download>SVG</a></div></div>
+  </div>
+  <div class="tile" style="margin-top:1rem"><div class="stage on-check">
+    <div class="sizes">
+      <figure><img src="assets/favicon-dark.svg" style="--s:64px" alt=""><figcaption class="label">64</figcaption></figure>
+      <figure><img src="assets/favicon-dark.svg" style="--s:32px" alt=""><figcaption class="label">32</figcaption></figure>
+      <figure><img src="assets/favicon-dark.svg" style="--s:16px" alt=""><figcaption class="label">16</figcaption></figure>
+      <figure><img src="assets/favicon-navy.svg" style="--s:32px" alt=""><figcaption class="label">navy</figcaption></figure>
+      <figure><img src="assets/favicon-light.svg" style="--s:32px" alt=""><figcaption class="label">paper</figcaption></figure>
+    </div></div><div class="cap"><span class="label">Favicons</span><a href="assets/favicon-dark.svg" download>SVG</a></div></div>
+</div></section>
+
+<section id="voice"><div class="wrap">
+  <div class="sec-head"><span class="reel">09</span><h2>Voice</h2>
+    <p>Wry and old-cinema. Signage is in caps, everything else is in plain sentence case. An outage is a feature: "We're experiencing a spotty connection."</p></div>
+  <div class="signs"><div>Now showing</div><div>Please stand by</div><div>Intermission</div><div>Technical difficulties</div></div>
+</div></section>
+</main>
+
+<footer><div class="wrap">
+  <p>Spotty Connection · made by Dylan Zickus · everything here is generated from one script.</p>
+  <a class="btn ghost" href="spotty-connection-brand-kit.zip" download>↓ Download the kit</a>
+</div></footer>
+
+<div class="toast" role="status" aria-live="polite" data-toast></div>
+<script>
+(() => {
+  // marquee bulb border on the hero sign
+  const box = document.querySelector("[data-bulbs]");
+  const place = () => {
+    const r = box.getBoundingClientRect(), gap = 34, dead = [5, 19, 33];
+    const nx = Math.max(2, Math.round(r.width / gap)), ny = Math.max(2, Math.round(r.height / gap));
+    const pts = [];
+    for (let i = 0; i < nx; i++) pts.push([i / nx * 100, 0]);
+    for (let i = 0; i < ny; i++) pts.push([100, i / ny * 100]);
+    for (let i = 0; i < nx; i++) pts.push([100 - i / nx * 100, 100]);
+    for (let i = 0; i < ny; i++) pts.push([0, 100 - i / ny * 100]);
+    box.innerHTML = pts.map(([x, y], k) =>
+      `<i class="${dead.includes(k) ? "dead" : ""}" style="left:${x}%;top:${y}%;animation-delay:${(k % 2) * .9}s"></i>`).join("");
+  };
+  place(); addEventListener("resize", () => { clearTimeout(place.t); place.t = setTimeout(place, 150); });
+
+  // click a swatch to copy its hex
+  const toast = document.querySelector("[data-toast]");
+  document.querySelectorAll(".sw").forEach(b => b.addEventListener("click", async () => {
+    const hex = b.dataset.hex;
+    try { await navigator.clipboard.writeText(hex); toast.textContent = `Copied ${hex}`; }
+    catch { toast.textContent = hex; }
+    toast.classList.add("show"); clearTimeout(toast.t); toast.t = setTimeout(() => toast.classList.remove("show"), 1400);
+  }));
+})();
+</script>
+</body>
+</html>
