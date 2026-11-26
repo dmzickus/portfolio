@@ -13,6 +13,7 @@
 <meta property="og:image" content="https://dylanzickus.com/assets/brand/og-card.png">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="theme-color" content="#0f1117">
+<script>try{if(localStorage.getItem("sc-mode")==="showtime")document.documentElement.dataset.mode="showtime"}catch(e){}</script>
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="/assets/brand/apple-touch-icon.png">
 <link rel="preload" href="/assets/fonts/spacegrotesk.woff2" as="font" type="font/woff2" crossorigin>
@@ -22,7 +23,7 @@
 <body class="{{BODY_CLASS}}">
 <a class="skip" href="#main">Skip to content</a>
 <nav class="site-nav" aria-label="Main">
-  <a class="nav-logo" href="/" aria-label="Spotty Connection, home"><img src="/assets/brand/logo-secondary.svg" alt="" width="190" height="32"></a>
+  <a class="nav-logo" href="/" aria-label="Spotty Connection, home"><img class="logo-house" src="/assets/brand/logo-secondary.svg" alt="" width="190" height="32"><img class="logo-show" src="/assets/brand/logo-showtime.svg" alt="" width="224" height="28"></a>
   <div class="nav-links">{{NAV}}</div>
 </nav>
 <main id="main">
@@ -31,6 +32,7 @@
 <footer class="site-footer">
   <div class="footer-social">{{SOCIAL}}</div>
   <p>© {{YEAR}} Dylan Zickus · Spotty Connection</p>
+  <button type="button" class="mode-switch" data-mode-toggle aria-pressed="false" title="Dim the house lights"><span class="ms-bulb" aria-hidden="true"></span><span class="ms-label">House lights</span></button>
   <a class="trap" href="/signal-lost/" rel="nofollow" tabindex="-1" aria-hidden="true">signal diagnostics</a>
 </footer>
 </body>

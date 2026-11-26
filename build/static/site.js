@@ -162,7 +162,32 @@
     let pokes = 0;
     mark.addEventListener("click", () => {
       mark.classList.remove("replay"); void mark.offsetWidth; mark.classList.add("replay");
-      if (++pokes === 5) mark.title = "okay okay, the connection's fine";
+      // easter egg: poke the signal five times and the house lights go down
+      if (++pokes === 5) { setMode(document.documentElement.dataset.mode === "showtime" ? "house" : "showtime"); pokes = 0; }
     });
   }
+
+  // ── house lights / showtime ─────────────────────────────────────
+  function setMode(mode) {
+    const root = document.documentElement, show = mode === "showtime";
+    if (!reduced) {
+      const f = document.createElement("div"); f.className = "mode-flash"; document.body.appendChild(f);
+      requestAnimationFrame(() => f.classList.add("go")); setTimeout(() => f.remove(), 1000);
+    }
+    setTimeout(() => {
+      if (show) root.dataset.mode = "showtime"; else delete root.dataset.mode;
+      try { localStorage.setItem("sc-mode", show ? "showtime" : "house"); } catch (e) {}
+      syncSwitch();
+      if (mark && !reduced) { mark.classList.remove("replay"); void mark.offsetWidth; mark.classList.add("replay"); }
+    }, reduced ? 0 : 320);
+  }
+  const modeSw = document.querySelector("[data-mode-toggle]");
+  function syncSwitch() {
+    if (!modeSw) return;
+    const show = document.documentElement.dataset.mode === "showtime";
+    modeSw.setAttribute("aria-pressed", String(show));
+    modeSw.querySelector(".ms-label").textContent = show ? "Showtime" : "House lights";
+    modeSw.title = show ? "Bring the house lights up" : "Dim the house lights";
+  }
+  if (modeSw) { syncSwitch(); modeSw.addEventListener("click", () => setMode(document.documentElement.dataset.mode === "showtime" ? "house" : "showtime")); }
 })();

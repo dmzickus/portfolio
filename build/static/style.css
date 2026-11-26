@@ -4,6 +4,7 @@
 
 @font-face { font-family: "Space Grotesk"; src: url("/assets/fonts/spacegrotesk.woff2") format("woff2");
   font-weight: 300 700; font-display: swap; }
+@font-face { font-family: "Bungee"; src: url("/assets/fonts/bungee.woff2") format("woff2"); font-weight: 400; font-display: swap; }
 @font-face { font-family: "JetBrains Mono"; src: url("/assets/fonts/jetbrainsmono.woff2") format("woff2");
   font-weight: 400 600; font-display: swap; }
 
@@ -351,3 +352,38 @@ em.r-sub { margin-left: .35rem; }
   .hero-mark .arc, .hero-mark .dot { opacity: 1; } .hero-mark .dud-lit { opacity: 0; }
 }
 @media print { .site-nav, .site-footer, .resume-tools { display: none; } }
+
+/* ── Spotty Connection: two modes. House lights (default, professional) / Showtime (playful). ── */
+body { transition: background-color .6s ease, color .6s ease; }
+.nav-logo .logo-show { display: none; width: 14rem; height: auto; }
+.mode-switch { display: inline-flex; align-items: center; gap: .55rem; margin-top: .9rem; padding: .4rem .8rem; border-radius: 999px;
+  border: 1px solid var(--rule); background: none; color: var(--muted); cursor: pointer;
+  font-family: var(--mono); font-size: .66rem; letter-spacing: .12em; text-transform: uppercase; }
+.mode-switch:hover { color: var(--text); border-color: var(--amber); }
+.ms-bulb { width: .6rem; height: .6rem; border-radius: 50%; background: #3a3e4f; box-shadow: inset 0 0 0 1px rgba(255,255,255,.15); transition: background .3s, box-shadow .3s; }
+.mode-flash { position: fixed; inset: 0; z-index: 300; pointer-events: none; background: #000; opacity: 0; }
+.mode-flash.go { animation: house-dim .9s ease forwards; }
+@keyframes house-dim { 0% { opacity: 0; } 35% { opacity: .85; } 55% { opacity: .2; } 65% { opacity: .7; } 100% { opacity: 0; } }
+
+html[data-mode="showtime"] {
+  --bg: #0d0b0a; --bg-card: #1a1614; --bg-card-hover: #221c19; --bg-code: #141110;
+  --text: #f3e9d2; --label: #d6cab3; --muted: #a89c88; --rule: #2e2722;
+}
+html[data-mode="showtime"] .site-nav { background: rgba(13, 11, 10, .9); }
+html[data-mode="showtime"] .site-nav::after { content: ""; position: absolute; left: 0; right: 0; bottom: -4px; height: 7px; pointer-events: none;
+  background: radial-gradient(circle, var(--amber) 0 2.5px, transparent 3px) 0 0 / 22px 7px repeat-x;
+  -webkit-mask: linear-gradient(90deg, #000 0 31%, transparent 31% 32.4%, #000 32.4% 71%, transparent 71% 72.4%, #000 72.4%);
+          mask: linear-gradient(90deg, #000 0 31%, transparent 31% 32.4%, #000 32.4% 71%, transparent 71% 72.4%, #000 72.4%);
+  animation: chase 1.6s steps(2) infinite; }
+@keyframes chase { 0% { background-position: 0 0; } 100% { background-position: 22px 0; } }
+html[data-mode="showtime"] .nav-logo .logo-house { display: none; }
+html[data-mode="showtime"] .nav-logo .logo-show { display: block; }
+html[data-mode="showtime"] .home-hero h1 { font-family: "Bungee", Impact, sans-serif; font-weight: 400; letter-spacing: 0; line-height: .95; }
+html[data-mode="showtime"] .hero-bg { background:
+    radial-gradient(ellipse 60% 70% at 15% 100%, rgba(79, 209, 197, .08), transparent 65%),
+    radial-gradient(ellipse 50% 60% at 85% 10%, rgba(246, 173, 85, .1), transparent 70%),
+    radial-gradient(ellipse 40% 40% at 50% 40%, rgba(42, 32, 26, .55), transparent 70%); }
+html[data-mode="showtime"] .ms-bulb { background: var(--amber); box-shadow: 0 0 8px var(--amber); }
+html[data-mode="showtime"] .bars i:not(.on) { background: #3a322c; }
+html[data-mode="showtime"] .hero-mark .dud { fill: #3a322c; stroke: #5a4e44; }
+@media (prefers-reduced-motion: reduce) { html[data-mode="showtime"] .site-nav::after { animation: none; } }
