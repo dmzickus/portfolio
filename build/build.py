@@ -672,6 +672,22 @@ If you're a crawler that ignored robots.txt: enjoy the maze.</em></p>
         write(f"/signal-lost/{i}/", page(babble(4)[:-1], rng.sample(ids, 6)))
 
 
+def build_london():
+    """Standalone London System Trainer app (installable PWA) at /london/, from build/london/.
+    __V__ in index.html and sw.js becomes a hash of the folder, so each change to the app is
+    a new service-worker version and installed copies update themselves."""
+    src, dst = BUILD / "london", OUT / "london"
+    h = hashlib.sha1()
+    for f in sorted(src.rglob("*")):
+        if f.is_file():
+            h.update(f.name.encode()); h.update(f.read_bytes())
+    v = h.hexdigest()[:10]
+    shutil.copytree(src, dst, dirs_exist_ok=True)
+    for name in ("index.html", "sw.js"):
+        p = dst / name
+        p.write_text(p.read_text("utf-8").replace("__V__", v), "utf-8")
+
+
 def build_sitemap(paths):
     urls = "".join(f"<url><loc>{SITE_URL}{p}</loc></url>" for p in paths)
     (OUT / "sitemap.xml").write_text(
@@ -710,6 +726,7 @@ def main():
     shutil.copy(STATIC / "CNAME", OUT / "CNAME")
     shutil.copy(STATIC / "brand" / "favicon.svg", OUT / "favicon.svg")
     shutil.copytree(BUILD / "brand", OUT / "brand", dirs_exist_ok=True)  # standalone brand-kit page at /brand/
+    build_london()
 
     build_home(site, projects)
     build_projects_index(site, projects)

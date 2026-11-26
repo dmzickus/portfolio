@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>London System Trainer</title>
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#f3f4f1" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#141917" media="(prefers-color-scheme: dark)">
+<link rel="manifest" href="/london/manifest.webmanifest">
+<link rel="icon" href="/london/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/london/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+/* Layout: one tabbed study app; each line is a board + move strip + coach note. */
+:root{
+  --bg:#f3f4f1; --surface:#ffffff; --ink:#1d2421; --muted:#5f6b66; --line:#d9ddd8;
+  --accent:#1f6f54; --accent-ink:#ffffff; --warn:#b4471f;
+  --sq-light:#e9e4d4; --sq-dark:#5b7f6c; --hl:rgba(243,200,62,.55);
+  --font-display:"Archivo",system-ui,sans-serif;
+  --font-body:"IBM Plex Sans",system-ui,sans-serif;
+  --font-mono:"IBM Plex Mono",ui-monospace,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#141917; --surface:#1d2320; --ink:#e7ebe8; --muted:#9aa59f; --line:#323a36;
+  --accent:#5cc29a; --accent-ink:#0d1a14; --warn:#f08a5d;
+  --sq-light:#c9c3b1; --sq-dark:#476656; --hl:rgba(243,200,62,.5); color-scheme:dark;}}
+:root[data-theme="dark"]{
+  --bg:#141917; --surface:#1d2320; --ink:#e7ebe8; --muted:#9aa59f; --line:#323a36;
+  --accent:#5cc29a; --accent-ink:#0d1a14; --warn:#f08a5d;
+  --sq-light:#c9c3b1; --sq-dark:#476656; --hl:rgba(243,200,62,.5); color-scheme:dark;}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:16px/1.55 var(--font-body);padding-top:env(safe-area-inset-top)}
+header{padding:20px 16px 0;max-width:980px;margin:0 auto}
+h1{font:800 clamp(26px,5vw,38px)/1.1 var(--font-display);margin:0 0 4px;letter-spacing:-.01em;text-wrap:balance}
+.sub{color:var(--muted);margin:0 0 14px}
+nav{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--line)}
+nav .inner{max-width:980px;margin:0 auto;padding:0 16px;display:flex;gap:4px;overflow-x:auto;scrollbar-width:none}
+nav a{flex:none;padding:12px 12px 10px;color:var(--muted);text-decoration:none;font:600 15px var(--font-body);border-bottom:3px solid transparent}
+nav a.on{color:var(--ink);border-color:var(--accent)}
+nav a:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+main{max-width:980px;margin:0 auto;padding:20px 16px 60px}
+h2{font:700 24px/1.2 var(--font-display);margin:0 0 6px;text-wrap:balance}
+h3{font:700 18px/1.25 var(--font-display);margin:0 0 6px;text-wrap:balance}
+p{margin:0 0 12px;max-width:65ch}
+.lede{color:var(--muted);max-width:65ch}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0 18px}
+.chip{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:7px 12px;font:500 14px var(--font-body);cursor:pointer;display:flex;gap:6px;align-items:center}
+.chip.on{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.tag{font:600 11px var(--font-body);text-transform:uppercase;letter-spacing:.04em;padding:2px 6px;border-radius:4px;background:var(--line);color:var(--ink)}
+.chip.on .tag{background:rgba(255,255,255,.25);color:inherit}
+.tag.warn{background:var(--warn);color:#fff}
+.study{display:grid;grid-template-columns:minmax(0,440px) minmax(0,1fr);gap:24px;align-items:start}
+@media (max-width:760px){.study{grid-template-columns:1fr}}
+.board{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));grid-template-rows:repeat(8,minmax(0,1fr));container-type:inline-size;aspect-ratio:1;width:100%;border-radius:6px;overflow:hidden;box-shadow:0 1px 0 var(--line),0 6px 20px rgba(0,0,0,.12);user-select:none;cursor:pointer;touch-action:manipulation}
+.sq{position:relative;display:flex;align-items:center;justify-content:center;min-width:0;min-height:0;aspect-ratio:1;overflow:hidden;font-size:9.5cqw;line-height:1}
+.sq.l{background:var(--sq-light)}.sq.d{background:var(--sq-dark)}
+.sq.hl::after{content:"";position:absolute;inset:0;background:var(--hl)}
+.pc{position:relative;z-index:1;font-family:"Segoe UI Symbol","DejaVu Sans","Noto Sans Symbols 2",serif}
+.pc.w{color:#fbfaf6;text-shadow:0 0 1px #111,0 0 1px #111,0 1px 1px #111,1px 0 1px #111,-1px 0 1px #111,0 -1px 1px #111}
+.pc.b{color:#171a19;text-shadow:0 0 1px #fff3}
+.coord{position:absolute;font:600 10px var(--font-mono);opacity:.75;z-index:2}
+.coord.f{right:3px;bottom:1px}.coord.r{left:3px;top:2px}
+.sq.l .coord{color:var(--sq-dark)}.sq.d .coord{color:var(--sq-light)}
+.controls{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px}
+.controls button{padding:10px 0;font:600 15px var(--font-body);border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.controls button.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.controls button:disabled{opacity:.4;cursor:default}
+.when{font:500 14px var(--font-mono);color:var(--muted);margin:0 0 10px}
+.note{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:8px;padding:12px 14px;min-height:84px;margin:12px 0}
+.note .mv{font:700 15px var(--font-mono);margin-bottom:2px}
+.note .who{font:600 12px var(--font-body);text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+.moves{display:flex;flex-wrap:wrap;gap:2px 4px;font:500 14px var(--font-mono)}
+.moves .n{color:var(--muted);padding:3px 0 3px 4px}
+.moves button{font:inherit;border:0;background:none;color:var(--ink);padding:3px 5px;border-radius:4px;cursor:pointer}
+.moves button.has{text-decoration:underline dotted var(--muted);text-underline-offset:3px}
+.moves button.on{background:var(--accent);color:var(--accent-ink)}
+.progress{height:4px;background:var(--line);border-radius:2px;margin-top:8px;overflow:hidden}
+.progress i{display:block;height:100%;background:var(--accent);width:0}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin-top:16px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px}
+.card ul,.card ol{margin:6px 0 0;padding-left:20px}
+.card li{margin:4px 0}
+.week{font:700 12px var(--font-body);text-transform:uppercase;letter-spacing:.06em;color:var(--accent)}
+.rules{counter-reset:r;list-style:none;padding:0;margin:14px 0;display:grid;gap:10px;max-width:70ch}
+.rules li{counter-increment:r;display:grid;grid-template-columns:34px 1fr;gap:10px;align-items:start}
+.rules li::before{content:counter(r);font:800 18px/34px var(--font-display);text-align:center;background:var(--accent);color:var(--accent-ink);border-radius:50%;width:34px;height:34px}
+.kbd{font:500 13px var(--font-mono);color:var(--muted)}
+[hidden]{display:none!important}
+.modes{display:inline-flex;border:1px solid var(--line);border-radius:999px;padding:3px;background:var(--surface);margin-bottom:10px}
+.modes button{border:0;background:none;color:var(--muted);font:600 14px var(--font-body);padding:6px 16px;border-radius:999px;cursor:pointer}
+.modes button.on{background:var(--accent);color:var(--accent-ink)}
+.sq.sel::after{content:"";position:absolute;inset:0;background:rgba(60,140,230,.45)}
+.sq.hint::after{content:"";position:absolute;inset:0;box-shadow:inset 0 0 0 4px var(--accent)}
+.sq.bad::after{content:"";position:absolute;inset:0;background:rgba(220,60,40,.5)}
+.drillbar{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.drillbar button{padding:10px 0;font:600 15px var(--font-body);border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.score{font:600 13px var(--font-body);color:var(--muted);margin-top:8px}
+.note.ok{border-left-color:var(--accent)}.note.err{border-left-color:var(--warn)}
+.done{color:var(--accent);margin-left:4px}
+@media (max-width:760px){.chips{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;margin-inline:-16px;padding-inline:16px}.chip{flex:none}}
+@media (prefers-reduced-motion:no-preference){.progress i{transition:width .2s}}
+.toast{position:fixed;left:50%;bottom:calc(16px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:999px;font:600 14px var(--font-body);z-index:20;box-shadow:0 6px 20px rgba(0,0,0,.25)}
+</style>
+</head>
+<body>
+<header>
+  <h1>London System Trainer</h1>
+  <p class="sub">One setup for White against almost everything, plus the few lines where you need a special answer.</p>
+</header>
+<nav><div class="inner" id="nav">
+  <a href="#plan">Game plan</a><a href="#setup">Setup</a><a href="#lines">Opponent lines</a><a href="#middlegame">Middlegame</a><a href="#endgame">Endgame</a><a href="#counter">Beat the London</a>
+</div></nav>
+<main>
+
+<section id="v-plan">
+  <h2>Your 4-week game plan</h2>
+  <p class="lede">At under 1000, games are decided by tactics, not theory. The London is perfect because the same setup works every game, so your thinking time goes to spotting threats. Spend about 20 minutes a day here, then play.</p>
+  <div class="cards">
+    <div class="card"><div class="week">Week 1</div><h3>Learn the setup cold</h3><ul>
+      <li>Study <a href="#setup">Setup</a>, then switch to Drill until you get a clean run.</li>
+      <li>Play 10 rapid games (15+10) as White using only the setup.</li>
+      <li>After each game, find the first move where you left the setup and ask why.</li></ul></div>
+    <div class="card"><div class="week">Week 2</div><h3>The dangerous edge cases</h3><ul>
+      <li>Learn the <b>...Qb6</b> line and the <b>b2 blunder</b>. These lose the most games.</li>
+      <li>Learn the <b>Englund trap</b>. Low-rated opponents play it a lot.</li>
+      <li>Learn <b>...Bf5</b> and <b>...Bd6</b>.</li></ul></div>
+    <div class="card"><div class="week">Week 3</div><h3>Other setups</h3><ul>
+      <li>King's Indian (...g6) and Dutch (...f5): learn the <b>h3 + Bh2</b> pocket.</li>
+      <li>Middlegame Plan A (Ne5 + Qh3): practice the h7 checkmate pattern.</li></ul></div>
+    <div class="card"><div class="week">Week 4+</div><h3>Plans and review</h3><ul>
+      <li>Middlegame Plans B and C. Endgame checklist.</li>
+      <li>Play Black against the London using <a href="#counter">Beat the London</a>. It teaches you what your opponents will try.</li>
+      <li>Keep reviewing your own losses: was it the opening, or a missed tactic?</li></ul></div>
+  </div>
+  <h2 style="margin-top:28px">The 6 rules of the London</h2>
+  <ol class="rules">
+    <li><span><b>Bishop out before e3.</b> Play Bf4 on move 2, then e3. Otherwise the bishop is stuck behind your pawn.</span></li>
+    <li><span><b>Build the triangle.</b> Pawns on c3, d4, e3. Don't trade on c5 or d5 unless it wins something.</span></li>
+    <li><span><b>Knights on f3 and d2.</b> Never c3 (that's a pawn square) unless the line says so.</span></li>
+    <li><span><b>When the black queen hits b6, look at b2.</b> Answer with Qb3 or Qc1.</span></li>
+    <li><span><b>Don't let your bishop get hunted.</b> vs ...Bd6 play Bg3. vs ...e5 or ...Nh5 ideas, play h3 so it can hide on h2.</span></li>
+    <li><span><b>Then attack the king.</b> Ne5, Qf3-h3, Bd3 at h7. That's your middlegame.</span></li>
+  </ol>
+  <p class="kbd">Every board has two modes. <b>Study</b>: tap the board (or use ← →) to step through with notes. <b>Drill</b>: you play your moves, the opponent replies automatically. A clean run with no mistakes marks the line ✓.</p>
+</section>
+
+<section id="v-setup" hidden>
+  <h2>The core setup</h2>
+  <p class="lede">These moves work against most of what Black plays. Study steps through with notes; Drill makes you play the moves yourself.</p>
+  <div id="setup-study"></div>
+</section>
+
+<section id="v-lines" hidden>
+  <h2>Opponent lines</h2>
+  <p class="lede">Same setup, with a special answer where Black does something specific. Learn the ones marked Trap or Warning first.</p>
+  <div class="chips" id="lines-chips"></div>
+  <div id="lines-study"></div>
+</section>
+
+<section id="v-middlegame" hidden>
+  <h2>Middlegame plans</h2>
+  <p class="lede">Once your setup is done, pick one of these plans. If you don't know what to do, Plan A is the default.</p>
+  <div class="chips" id="mg-chips"></div>
+  <div id="mg-study"></div>
+  <div class="cards">
+    <div class="card"><h3>Tactics to look for every move</h3><ul>
+      <li><b>Bxh7+ / Qxh7#</b>: when the f6 knight leaves, h7 is often undefended.</li>
+      <li><b>Ne5 forks</b>: from e5 your knight hits c6, d7, f7, g6.</li>
+      <li><b>Qb3</b>: hits b7 when Black's c8 bishop has left.</li>
+      <li><b>Bb5 pin</b>: pins a knight on c6 to the king when the e8 king hasn't castled.</li>
+    </ul></div>
+    <div class="card"><h3>Before every move, check</h3><ol>
+      <li>What did their last move attack?</li>
+      <li>Are any of my pieces undefended? (b2 especially)</li>
+      <li>Do I have a check, capture or threat?</li>
+    </ol></div>
+  </div>
+</section>
+
+<section id="v-endgame" hidden>
+  <h2>Endgame goals</h2>
+  <p class="lede">London games often reach endgames with a solid pawn structure for you. These goals turn that into wins.</p>
+  <div class="cards">
+    <div class="card"><h3>Keep your dark-squared bishop</h3><p>Your Bf4/Bg3 bishop is the London's best piece. In the endgame, it's strongest when Black's pawns are stuck on dark squares. Avoid trading it for a knight unless you win material.</p></div>
+    <div class="card"><h3>Activate your king</h3><p>Once queens are off, march your king to the center (e2, d3). A king in the center is worth an extra piece in the endgame.</p></div>
+    <div class="card"><h3>Rooks on open files</h3><p>Put rooks on the c-file or the half-open h-file. A rook reaching the 7th rank (your opponent's second row) usually wins pawns.</p></div>
+    <div class="card"><h3>Use the queenside majority</h3><p>If Black traded ...cxd4 and you recaptured exd4, you often have more pawns on the queenside. Push them (b4, a4, b5) to make a passed pawn.</p></div>
+    <div class="card"><h3>Trade when ahead</h3><p>Up material? Trade pieces, not pawns. Every trade makes your extra material count more.</p></div>
+    <div class="card"><h3>Know these basic wins</h3><ul><li>King + queen vs king checkmate</li><li>King + rook vs king checkmate</li><li>King + pawn vs king: the "opposition" rule</li></ul><p>Practice them on lichess.org/practice until they're automatic.</p></div>
+  </div>
+</section>
+
+<section id="v-counter" hidden>
+  <h2>Beat the London (as Black)</h2>
+  <p class="lede">What to play when someone plays the London against you. This board is shown from Black's side. Understanding these also shows you exactly what to watch out for as White.</p>
+  <div class="chips" id="c-chips"></div>
+  <div id="c-study"></div>
+</section>
+
+</main>
+<script src="/london/data.js?v=__V__"></script>
+<script>
+const GLYPH={k:"♚",q:"♛",r:"♜",b:"♝",n:"♞",p:"♟"};
+function parseFen(f){const rows=f.split("/");const b=[];for(const r of rows){const row=[];for(const ch of r){if(/\d/.test(ch))for(let i=0;i<+ch;i++)row.push(null);else row.push(ch);}b.push(row);}return b;}
+let active=null; // current study controller for keyboard
+
+function loadM(){try{return JSON.parse(localStorage.getItem("london-mastered")||"{}")}catch(e){return {}}}
+function saveM(id){try{const m=loadM();m[id]=1;localStorage.setItem("london-mastered",JSON.stringify(m))}catch(e){}}
+function makeStudy(root,line,onMaster){
+  let i=0,mode="study",sel=null,miss=0,mistakes=0,hint=null,bad=null,busy=false,timer=null;
+  const flip=line.orient==="b";const mine=k=>(line.orient==="w")===(k%2===1); // ply k is mine?
+  root.innerHTML=`<div class="modes" role="tablist"><button data-m="study" class="on">Study</button><button data-m="drill">Drill</button></div>
+    <div class="study"><div><div class="board" tabindex="0" aria-label="Chess board"></div>
+    <div class="controls"><button data-a="start" aria-label="Start">⏮</button><button data-a="prev" aria-label="Previous move">◀</button><button data-a="next" class="primary" aria-label="Next move">▶</button><button data-a="end" aria-label="End">⏭</button></div>
+    <div class="drillbar" hidden><button data-d="hint">Hint</button><button data-d="restart">Restart drill</button></div>
+    <div class="progress"><i></i></div><div class="score" hidden></div></div>
+    <div><h3>${line.title}</h3>${line.when?`<p class="when">${line.when}</p>`:""}
+    <div class="note" aria-live="polite"></div><div class="moves"></div></div></div>`;
+  const board=root.querySelector(".board"),note=root.querySelector(".note"),movesEl=root.querySelector(".moves"),bar=root.querySelector(".progress i"),
+    ctrls=root.querySelector(".controls"),dbar=root.querySelector(".drillbar"),score=root.querySelector(".score");
+  let html="";line.plies.forEach((p,k)=>{if(!k)return;if(k%2===1)html+=`<span class="n">${(k+1)/2}.</span>`;html+=`<button data-k="${k}" class="${p.note?"has":""}">${p.san}</button>`;});
+  movesEl.innerHTML=html;
+  movesEl.onclick=e=>{const b=e.target.closest("button");if(b&&mode==="study")go(+b.dataset.k);};
+  ctrls.onclick=e=>{const a=e.target.closest("button")?.dataset.a;if(!a)return;go(a==="start"?0:a==="prev"?i-1:a==="next"?i+1:line.plies.length-1);};
+  root.querySelector(".modes").onclick=e=>{const m=e.target.closest("button")?.dataset.m;if(m)setMode(m);};
+  dbar.onclick=e=>{const d=e.target.closest("button")?.dataset.d;if(d==="restart")startDrill();if(d==="hint"&&i<line.plies.length-1&&mine(i+1)){hint=line.plies[i+1].from;miss=Math.max(miss,2);render();}};
+  board.onclick=e=>{if(mode==="study")return go(i+1);const sq=e.target.closest(".sq");if(sq)tap(sq.dataset.sq);};
+  board.onkeydown=e=>{if(mode==="study"&&(e.key==="Enter"||e.key===" ")){e.preventDefault();go(i+1);}};
+  const num=k=>Math.ceil(k/2)+(k%2===1?". ":"... ");
+  function render(msg,cls){
+    const p=line.plies[i],b=parseFen(p.fen);let s="";
+    for(let r=0;r<8;r++)for(let c=0;c<8;c++){
+      const rr=flip?7-r:r,cc=flip?7-c:c,n="abcdefgh"[cc]+(8-rr),pc=b[rr][cc],light=(rr+cc)%2===0;
+      let cl=(n===p.from||n===p.to)?" hl":"";if(n===sel)cl=" sel";if(n===hint)cl+=" hint";if(n===bad)cl=" bad";
+      let coord="";if(r===7)coord+=`<span class="coord f">${"abcdefgh"[cc]}</span>`;if(c===0)coord+=`<span class="coord r">${8-rr}</span>`;
+      s+=`<div class="sq ${light?"l":"d"}${cl}" data-sq="${n}">${coord}${pc?`<span class="pc ${pc===pc.toUpperCase()?"w":"b"}">${GLYPH[pc.toLowerCase()]}︎</span>`:""}</div>`;
+    }
+    board.innerHTML=s;
+    note.className="note"+(cls?" "+cls:"");
+    if(msg!==undefined){note.innerHTML=msg;}
+    else if(i===0){note.innerHTML=`<div class="who">Start</div>${line.summary}`;}
+    else{note.innerHTML=`<div class="who">${mine(i)?"Your move":"Opponent"}</div><div class="mv">${num(i)}${p.san}</div>${p.note||'<span style="color:var(--muted)">Keep going. Tap the board.</span>'}`;}
+    movesEl.querySelectorAll("button").forEach(x=>x.classList.toggle("on",+x.dataset.k===i));
+    root.querySelector('[data-a="prev"]').disabled=root.querySelector('[data-a="start"]').disabled=i===0;
+    root.querySelector('[data-a="next"]').disabled=root.querySelector('[data-a="end"]').disabled=i===line.plies.length-1;
+    bar.style.width=(i/(line.plies.length-1)*100)+"%";
+    if(mode==="drill")score.textContent=`Mistakes: ${mistakes}`;
+  }
+  function go(n){i=Math.max(0,Math.min(line.plies.length-1,n));render();}
+  function setMode(m){mode=m;clearTimeout(timer);root.querySelectorAll(".modes button").forEach(b=>b.classList.toggle("on",b.dataset.m===m));
+    const d=m==="drill";ctrls.hidden=d;dbar.hidden=!d;movesEl.hidden=d;score.hidden=!d;
+    if(d)startDrill();else{sel=hint=bad=null;go(0);}}
+  function startDrill(){clearTimeout(timer);i=0;sel=hint=bad=null;miss=0;mistakes=0;busy=false;
+    render(`<div class="who">Drill</div>You play ${line.orient==="w"?"White":"Black"}. Tap a piece, then tap where it goes. The opponent's moves play automatically.`);
+    if(!mine(1)){busy=true;timer=setTimeout(oppMove,700);}else prompt();}
+  function prompt(extra){render(`${extra||""}<div class="who">Your move</div><b>${num(i+1)}?</b> Find the next ${line.orient==="w"?"White":"Black"} move.`);}
+  function oppMove(){i++;busy=false;const p=line.plies[i];
+    if(i>=line.plies.length-1)return finish();
+    prompt(`<div class="who">Opponent played</div><div class="mv">${num(i)}${p.san}</div>${p.note?p.note+"<hr style='border:0;border-top:1px solid var(--line);margin:8px 0'>":""}`);}
+  function tap(n){if(busy||i>=line.plies.length-1)return;const exp=line.plies[i+1];
+    const b=parseFen(line.plies[i].fen),f="abcdefgh".indexOf(n[0]),r=8-+n[1],pc=b[r][f];
+    const own=pc&&((pc===pc.toUpperCase())===(line.orient==="w"));
+    if(!sel||own){if(own){sel=n;render(note.innerHTML,note.className.replace("note","").trim());}return;}
+    const from=sel;sel=null;
+    if(from===exp.from&&n===exp.to){i++;miss=0;hint=null;busy=true;
+      render(`<div class="who">Correct</div><div class="mv">${num(i)}${exp.san}</div>${exp.note||""}`,"ok");
+      if(i>=line.plies.length-1)return finish();
+      timer=setTimeout(oppMove,exp.note?1600:700);
+    }else{miss++;mistakes+=miss===1?1:0;bad=n;
+      if(miss>=3){i++;hint=null;miss=0;busy=true;bad=null;
+        render(`<div class="who">The move was</div><div class="mv">${num(i)}${exp.san}</div>${exp.note||""}`,"err");
+        if(i>=line.plies.length-1)return finish();timer=setTimeout(oppMove,2200);return;}
+      if(miss>=2)hint=exp.from;
+      render(`<div class="who">Not quite</div>${miss>=2?"Hint: the highlighted piece moves. ":"Try again. "}`,"err");
+      timer=setTimeout(()=>{bad=null;render(note.innerHTML,"err");},500);}
+  }
+  function finish(){busy=true;
+    if(mistakes===0){saveM(line.id);onMaster&&onMaster();}
+    render(`<div class="who">Line complete</div>${mistakes===0?"Perfect, no mistakes. This line is marked as learned ✓":`You made ${mistakes} mistake${mistakes>1?"s":""}. Restart and go for a clean run.`}`,mistakes?"err":"ok");}
+  render();
+  return {go:d=>{if(mode==="study")go(i+d);}};
+}
+function makeGroup(chipsId,studyId,lines){
+  const chips=document.getElementById(chipsId),study=document.getElementById(studyId);let ctl;
+  let cur=0;
+  function draw(){const m=loadM();chips.innerHTML=lines.map((l,k)=>`<button class="chip${k===cur?" on":""}" data-k="${k}">${l.title}${l.tag?` <span class="tag${/Trap|Warning/.test(l.tag)?" warn":""}">${l.tag}</span>`:""}${m[l.id]?'<span class="done" aria-label="learned">✓</span>':""}</button>`).join("");}
+  function pick(k){cur=k;draw();ctl=makeStudy(study,lines[k],draw);active=ctl;}
+  chips.onclick=e=>{const c=e.target.closest(".chip");if(c)pick(+c.dataset.k);};
+  pick(0);return ()=>ctl;
+}
+const ctls={};
+const setupCtl=makeStudy(document.getElementById("setup-study"),DATA.setup);
+ctls.setup=()=>setupCtl;
+ctls.lines=makeGroup("lines-chips","lines-study",DATA.lines);
+ctls.middlegame=makeGroup("mg-chips","mg-study",DATA.middlegame);
+ctls.counter=makeGroup("c-chips","c-study",DATA.counter);
+const views=["plan","setup","lines","middlegame","endgame","counter"];
+function route(){const h=location.hash.slice(1);const v=views.includes(h)?h:"plan";
+  views.forEach(x=>document.getElementById("v-"+x).hidden=x!==v);
+  document.querySelectorAll("#nav a").forEach(a=>a.classList.toggle("on",a.getAttribute("href")==="#"+v));
+  active=ctls[v]?ctls[v]():null;}
+window.addEventListener("hashchange",()=>{route();window.scrollTo(0,0);});
+route();
+document.addEventListener("keydown",e=>{if(!active||e.target.closest("input,textarea"))return;if(e.key==="ArrowRight"){active.go(1);e.preventDefault();}if(e.key==="ArrowLeft"){active.go(-1);e.preventDefault();}});
+
+// Installable app: the service worker keeps it working offline and picks up new deploys.
+if("serviceWorker" in navigator){
+  const hadSW=!!navigator.serviceWorker.controller;
+  navigator.serviceWorker.register("/london/sw.js?v=__V__",{scope:"/london/"}).then(r=>r.update()).catch(()=>{});
+  navigator.serviceWorker.addEventListener("controllerchange",()=>{
+    if(!hadSW)return;
+    const t=document.createElement("button");t.className="toast";t.textContent="Updated. Tap to reload";
+    t.onclick=()=>location.reload();document.body.appendChild(t);
+  });
+}
+</script>
+</body>
+</html>

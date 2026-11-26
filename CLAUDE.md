@@ -30,3 +30,9 @@ python build/build.py --strict
 ```
 
 Then commit and push to `master`; GitHub Actions deploys it. Look at the changed page locally if anything structural changed.
+
+## London System Trainer (/london/)
+
+- Dylan's chess opening trainer, an installable app (PWA) at dylanzickus.com/london/. Unlisted: not in nav, sitemap or robots-indexed.
+- Source: `build/london/` — `index.html` (UI), `data.js` (all lines; validate moves with chess.js before shipping), `sw.js`, manifest, icons. `build_london()` copies it and stamps `__V__` with a content hash, so any change is a new service-worker version and his installed copy shows an "Updated" toast.
+- He asked for updates to this app to be pushed straight from chat; no site preview needed unless the main site changes.
