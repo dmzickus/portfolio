@@ -10,20 +10,20 @@
 <meta property="og:title" content="{{TITLE}}">
 <meta property="og:description" content="{{DESC}}">
 <meta property="og:url" content="{{CANONICAL}}">
-<meta property="og:image" content="https://dylanzickus.com/assets/brand/og-card.png">
+<meta property="og:image" content="https://dylanzickus.com/assets/brand/og-card.png?v={{V}}">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="theme-color" content="#0f1117">
 <script>try{if(localStorage.getItem("sc-mode")==="showtime")document.documentElement.dataset.mode="showtime"}catch(e){}</script>
-<link rel="icon" href="/favicon.svg" type="image/svg+xml">
-<link rel="apple-touch-icon" href="/assets/brand/apple-touch-icon.png">
+<link rel="icon" href="/favicon.svg?v={{V}}" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/assets/brand/apple-touch-icon.png?v={{V}}">
 <link rel="preload" href="/assets/fonts/spacegrotesk.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="/assets/style.css">
-<script defer src="/assets/site.js"></script>
+<link rel="stylesheet" href="/assets/style.css?v={{V}}">
+<script defer src="/assets/site.js?v={{V}}"></script>
 </head>
 <body class="{{BODY_CLASS}}">
 <a class="skip" href="#main">Skip to content</a>
 <nav class="site-nav" aria-label="Main">
-  <a class="nav-logo" href="/" aria-label="Spotty Connection, home"><img class="logo-house" src="/assets/brand/logo-secondary.svg" alt="" width="190" height="32"><img class="logo-show" src="/assets/brand/logo-showtime.svg" alt="" width="224" height="28"></a>
+  <a class="nav-logo" href="/" aria-label="Spotty Connection, home"><img class="logo-house" src="/assets/brand/logo-secondary.svg?v={{V}}" alt="" width="190" height="32"><img class="logo-show" src="/assets/brand/logo-showtime.svg?v={{V}}" alt="" width="224" height="28"></a>
   <div class="nav-links">{{NAV}}</div>
 </nav>
 <main id="main">
@@ -31,7 +31,7 @@
 </main>
 <footer class="site-footer">
   <div class="footer-social">{{SOCIAL}}</div>
-  <p>© {{YEAR}} Dylan Zickus · <a class="quiet" href="/brand/">Spotty Connection</a><span class="show-only"> · <a href="/brand/#lore">Intermission</a></span></p>
+  <p>© {{YEAR}} Dylan Zickus · <span class="house-only">Spotty Connection</span><a class="quiet show-only" href="/brand/">Spotty Connection</a></p>
   <button type="button" class="mode-switch" data-mode-toggle aria-pressed="false" title="Dim the house lights"><span class="ms-bulb" aria-hidden="true"></span><span class="ms-label">House lights</span></button>
   <a class="trap" href="/signal-lost/" rel="nofollow" tabindex="-1" aria-hidden="true">signal diagnostics</a>
 </footer>

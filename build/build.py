@@ -15,6 +15,7 @@ Content model (see README.md and content/_template/index.md):
 Folders starting with "_" are ignored.
 """
 import argparse
+import hashlib
 import datetime as dt
 import html
 import json
@@ -190,6 +191,18 @@ def mini_card(p) -> str:
 NAV = [("/projects/", "Projects"), ("/resume/", "Resume"), ("/about/", "About")]
 
 
+def asset_version() -> str:
+    """Short hash of everything in static/, appended as ?v= to asset URLs so a deploy
+    busts browser and Cloudflare caches (they cache /assets/* and /favicon.svg for hours)."""
+    if not hasattr(asset_version, "v"):
+        h = hashlib.sha1()
+        for f in sorted(STATIC.rglob("*")):
+            if f.is_file():
+                h.update(f.name.encode()); h.update(f.read_bytes())
+        asset_version.v = h.hexdigest()[:8]
+    return asset_version.v
+
+
 def shell(site, *, title, desc, body, path, body_class="", og_type="website", crumb=""):
     tpl = read(TEMPLATES / "base.html")
     nav = "".join(
@@ -209,6 +222,7 @@ def shell(site, *, title, desc, body, path, body_class="", og_type="website", cr
         "BODY_CLASS": body_class,
         "SOCIAL": social_links(site),
         "YEAR": str(dt.date.today().year),
+        "V": asset_version(),
     }
     out = tpl
     for k, v in vals.items():
